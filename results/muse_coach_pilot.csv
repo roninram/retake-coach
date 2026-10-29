@@ -1,0 +1,21 @@
+image_id,truth,retake,problems,instruction,tokens_in,tokens_out,cost
+393_l2,good,True,"['focus', 'obstruction']",Clean the lens and retake with sharp focus on the small vessels.,1520,803,0.00531275
+392_r2,good,False,[],"Image is clear and well centered, no retake needed.",1446,886,0.005573
+404_r1,good,True,['aim'],Re-aim to center the field between the optic disc and macula.,1446,1032,0.0061935
+298_l2,good,True,['obstruction'],Clean the lens and retake centered on the macula to remove the central glare.,1446,1219,0.00698825
+394_r1,good,True,['aim'],Re-aim to center the field midway between the optic disc and macula.,1520,1183,0.00692775
+358_r1,focus,True,"['focus', 'aim', 'obstruction']","Re-center the disc and macula, clean the lens to remove glare, and refocus sharply.",1446,961,0.00589175
+397_l2,focus,True,"['aim', 'obstruction']",Re-center between the disc and macula and remove the central glare reflection.,1446,642,0.004536
+362_r2,focus,True,"['focus', 'aim', 'exposure']","Re-center to include disc and macula well, refocus sharply and brighten for even exposure.",1520,1200,0.007000000000000001
+300_r2,focus,True,"['focus', 'aim', 'obstruction']","Recenter between the disc and macula, refocus sharply, and clean the lens to remove glare.",1446,905,0.00565375
+334_l2,focus,True,"['aim', 'obstruction']",Re-center to include disc and macula and clear the lower lid shadow.,1446,584,0.0042895
+356_l1,aim,True,"['aim', 'obstruction']",Re-center to include both disc and macula and hold the eyelid to clear the dark shadow on the right.,1520,1002,0.006158500000000001
+367_r1,aim,True,"['aim', 'obstruction']",Re-center to include disc and macula and clear the glare on the right edge.,1520,623,0.00454775
+311_l1,aim,True,"['aim', 'obstruction']",Recenter between the disc and macula and clear the haze blocking the left side.,1520,971,0.006026750000000001
+364_l1,aim,True,['aim'],Re-center between the optic disc and macula so both appear near the middle.,1446,1503,0.008195250000000001
+294_l1,aim,True,"['focus', 'aim', 'exposure']",Re-center to include both disc and macula with better focus and brighter exposure.,1520,812,0.005351
+296_r2,obstruction,True,"['focus', 'aim', 'obstruction']","Recenter between disc and macula, clean the lens and refocus to remove the central reflection.",1520,574,0.0043395
+322_r1,obstruction,True,"['focus', 'aim', 'obstruction']","Clean the lens, hold lids clear, center between disc and macula and refocus then retake.",1446,1033,0.00619775
+326_r2,obstruction,True,['obstruction'],Clean the lens and retake to remove the central glare obscuring the retina.,1446,710,0.004824999999999999
+344_l2,obstruction,True,"['focus', 'obstruction', 'exposure']","Clean the lens, hold lids clear, refocus sharply and retake with balanced exposure.",1446,1181,0.00682675
+399_l1,obstruction,True,"['focus', 'obstruction']","Clean the lens, refocus sharply and reposition to avoid glare then retake.",1446,708,0.0048165

@@ -1,0 +1,62 @@
+== 1. Held-out DeepDRiD test (400 photos, never used before) ==
+      check test photos with it  AUROC test    95% CI  AUROC validation  sharpness only (test)  sensitivity  specificity
+     retake             220/400       0.791 0.74-0.83             0.772                  0.741         0.90         0.42
+      focus             145/400       0.890 0.85-0.92             0.892                  0.875         0.86         0.69
+        aim              77/400       0.856 0.81-0.90             0.897                  0.525         0.81         0.76
+obstruction             123/400       0.943 0.92-0.96             0.948                  0.851         0.86         0.86
+
+Retake asked for 76% of test photos: caught 199/220 not-good-enough photos, sent back 105/180 good ones.
+Caught photos with a labelled problem: the top named problem is a real one in 88%, at least one named problem is real in 96% (n=149); 1.5 problems named per retake on average.
+  only focus      : top named problem right 89% (n=38)
+  only aim        : top named problem right 91% (n=34)
+  only obstruction: top named problem right 33% (n=12)
+
+== Heads vs Muse Spark on the pilot's 20 validation photos ==
+                photos kept: heads kept: Muse retake: heads retake: Muse right problem first: heads right problem named: Muse problems named, avg: heads problems named, avg: Muse
+            good (n=5)           3          1                                                                                                                                     
+      focus only (n=5)                                    5            5                          4                         3                        1.2                       2.6
+        aim only (n=5)                                    2            5                          2                         5                        0.6                       2.0
+obstruction only (n=5)                                    5            5                          3                         5                        2.0                       2.4
+
+== 2. Other DeepDRiD hospitals: AUROC (95% CI) ==
+      check Nicheng validation Nation + Shanghai (n=92)  photos with it there
+     retake  0.774 (0.73-0.82)        0.753 (0.65-0.85)                    50
+      focus  0.880 (0.84-0.92)        0.877 (0.80-0.94)                    29
+        aim  0.901 (0.86-0.93)        0.934 (0.88-0.98)                    15
+obstruction  0.943 (0.92-0.96)        0.906 (0.84-0.96)                    25
+
+== 3. New camera (IDRiD) ==
+Retake asked for 34% of 597 IDRiD photos picked for grading (DeepDRiD test good photos: 58%)
+     damage retake asked   top problem named (of retakes)
+      focus      123/150  focus 118, aim 3, obstruction 2
+   exposure       95/150  focus 80, aim 12, obstruction 3
+obstruction       89/150 focus 42, aim 21, obstruction 26
+        aim       92/150  focus 39, aim 52, obstruction 1
+
+== 4. Energy guard ==
+guard                                                 one camera two cameras
+photos                                    should be                         
+DeepDRiD test (same camera) (n=400)       accepted          100%        100%
+IDRiD damaged copies (n=600)              accepted           82%         88%
+IDRiD photos 300+ (new camera) (n=297)    accepted          100%        100%
+everyday pictures + black frame (n=13)    turned away         0%          0%
+fundus photo from the web (skimage) (n=1) accepted          100%        100%
+widefield photos (DeepDRiD UWF) (n=50)    turned away         0%          0%
+  astronaut              energy   195.75  (threshold 6.93)
+  coffee                 energy   194.75  (threshold 6.93)
+  chelsea                energy   207.07  (threshold 6.93)
+  rocket                 energy   185.92  (threshold 6.93)
+  hubble_deep_field      energy    74.50  (threshold 6.93)
+  immunohistochemistry   energy   104.48  (threshold 6.93)
+  camera                 energy   199.23  (threshold 6.93)
+  moon                   energy   103.43  (threshold 6.93)
+  page                   energy   171.89  (threshold 6.93)
+  text                   energy   155.39  (threshold 6.93)
+  coins                  energy   164.77  (threshold 6.93)
+  horse                  energy   209.98  (threshold 6.93)
+  retina                 energy     1.81  (threshold 6.93)
+  black frame            energy   197.22  (threshold 6.93)
+
+Saved quality/coach_model.npz: retake threshold 0.22, problem thresholds focus 0.18, aim 0.13, obstruction 0.25, guard energy <= 6.93
+
+Muse Spark wording: 8 requests, $0.0190 total

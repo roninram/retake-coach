@@ -1,0 +1,14 @@
+== Held-out DeepDRiD test (400 photos) ==
+      check test photos with it  AUROC test    95% CI  AUROC val  sharpness only (test)  sensitivity  specificity
+     retake             220/400       0.823 0.78-0.86      0.809                  0.741         0.74         0.77
+      focus             145/400       0.903 0.87-0.93      0.897                  0.875         0.87         0.70
+        aim              77/400       0.851 0.80-0.90      0.899                  0.525         0.71         0.89
+obstruction             123/400       0.945 0.92-0.96      0.954                  0.851         0.81         0.87
+
+Retake asked for 51% of test photos: caught 162/220 not-good-enough photos, sent back 42/180 good ones.
+Caught photos with a labelled problem (n=135): top named problem real 89%
+  only focus      : top named problem right 100% (n=26)
+  only aim        : top named problem right 89% (n=18)
+  only obstruction: top named problem right 30% (n=10)
+IDRiD photos picked for grading (another camera): retake asked for 9%
+Guard: accepts DeepDRiD test 100%, IDRiD 300+ 100%, web fundus 100%; turns away widefield 100%, everyday + black frame 100%

@@ -1,0 +1,27 @@
+IDRiD photos with both marks: 413 training, 103 test
+one disc diameter = 0.153 of the photo width (from the expert marks)
+  penalty 0.0001: held-out median error disc 0.09 DD, macula 0.08 DD
+  penalty 0.001: held-out median error disc 0.09 DD, macula 0.09 DD
+  penalty 0.01: held-out median error disc 0.10 DD, macula 0.09 DD
+  penalty 0.1: held-out median error disc 0.11 DD, macula 0.10 DD
+  penalty 1: held-out median error disc 0.12 DD, macula 0.12 DD
+chosen penalty 0.0001; "not in the picture" below peak [0.22  0.139]
+
+== IDRiD held-out test (103 photos), error from the experts' marks ==
+     structure          method  median error (disc diameters) within 0.5 DD within 1 DD said not in picture
+    optic disc  DINOv2 locator                           0.08          100%        100%                  0%
+    optic disc simple baseline                           0.21           95%         96%                  0%
+fovea (macula)  DINOv2 locator                           0.08           98%        100%                  0%
+fovea (macula) simple baseline                           0.82           48%         51%                  0%
+
+== DeepDRiD test (another camera): measured positions vs graders' field definition ==
+             photos  both_within_2DD  one_not_in_picture  median_worst_DD
+field score                                                              
+1                 4             0.25                0.25             2.48
+4                11             0.18                0.64            10.00
+6                62             0.27                0.19             2.56
+8               259             0.54                0.08             1.96
+10               64             0.27                0.00             2.35
+AUROC of the measured worst distance for field definition <= 6 (the coach's 'aim' problem): 0.656  (the DINOv2 aim head scored 0.856 on these photos)
+
+Saved quality/locator.npz

@@ -1,0 +1,9 @@
+lesion,prompt,images,dice,precision,recall,lesions_found,gt_lesions,false_blobs,lesion_recall,false_alarm_rate
+EX,hard exudate,3,0.0,,0.0,0,545,0,0.0,
+EX,small yellow deposit,3,0.0,,0.0,0,545,0,0.0,
+HE,dark red blot,3,0.0,,0.0,0,35,0,0.0,
+HE,retinal hemorrhage,3,0.0,0.0,0.0,0,35,1,0.0,
+MA,microaneurysm,3,0.0,,0.0,0,64,0,0.0,
+MA,tiny red dot,3,0.0,,0.0,0,64,0,0.0,
+SE,cotton wool spot,2,0.0,,0.0,0,6,0,0.0,0.0
+SE,pale fluffy patch,2,0.0,,0.0,0,6,0,0.0,0.0

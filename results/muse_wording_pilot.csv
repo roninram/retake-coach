@@ -1,0 +1,9 @@
+image_id,problems,instruction,source,cost
+384_l1,['focus'],Refocus the camera and ask the patient to blink to clear haze for sharper small vessels.,muse-spark,0.0022907500000000003
+408_l2,['focus'],"Refocus the camera and retake, ensuring the small central vessels appear sharp and clear.",muse-spark,0.00202725
+354_l1,['aim'],Shift the view leftward so the central disc and the area to its left are both near the centre.,muse-spark,0.00276575
+354_r1,['aim'],Re-aim more to the left to center the optic disc and macula together.,muse-spark,0.00352225
+386_l1,['obstruction'],"Hold upper eyelid up and clear lashes from top, then retake to remove upper shadow and central glare.",muse-spark,0.0019705
+396_r2,['obstruction'],"Hold upper and lower lids wide open to clear top and bottom shadows, clean lens to remove spots and retake.",muse-spark,0.0021792499999999998
+347_r1,"['focus', 'obstruction']","Refocus on small vessels, clean lens, ask patient to open wide to clear central haze and right-side and top glare.",muse-spark,0.00221925
+347_r2,"['focus', 'obstruction']","Refocus to sharpen small vessels, ask patient to open wide and lift upper lid to clear dark shadow top-center.",muse-spark,0.0020535

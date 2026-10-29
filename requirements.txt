@@ -1,0 +1,12 @@
+numpy
+scipy
+pillow
+pandas
+openpyxl
+scikit-learn
+torch
+transformers>=4.40
+fastapi
+uvicorn
+python-multipart
+openai

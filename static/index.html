@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retake Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* Dark on purpose: fundus cameras are used in dimmed rooms, so the screen must not light the room up. */
+:root {
+  --room: #171c22;      /* exam-room slate */
+  --panel: #202830;
+  --line: #34414d;
+  --ink: #e6ebf0;
+  --ink-2: #9eacba;
+  --keep: #63c29e;      /* the camera's green fixation light */
+  --retake: #f4b740;    /* amber "not ready" lamp */
+  --away: #aab5c2;
+  --focus: #8fc1ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--room); color: var(--ink); }
+body {
+  font-family: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
+  font-size: 17px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 18px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--line);
+}
+.mark { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 21px; letter-spacing: -0.01em; }
+.mark svg { width: 26px; height: 26px; }
+.status { display: flex; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); }
+.status span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.status b { color: var(--ink); font-weight: 600; }
+
+main {
+  display: grid; grid-template-columns: minmax(280px, 540px) minmax(0, 560px); column-gap: clamp(24px, 5vw, 72px);
+  row-gap: 24px; grid-template-areas: "photo result" "samples result" "session session";
+  justify-content: center; align-items: start; padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 40px);
+}
+.photo { grid-area: photo; } .result { grid-area: result; } .samples { grid-area: samples; } .session { grid-area: session; }
+@media (max-width: 900px) {
+  main { grid-template-columns: minmax(0, 520px); grid-template-areas: "photo" "result" "samples" "session"; }
+}
+
+/* ---- viewfinder: the photo in its circle, ringed by the three checks ---- */
+.viewfinder { position: relative; aspect-ratio: 660 / 520; width: 100%; }
+.viewfinder svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.arc { fill: none; stroke: var(--line); stroke-width: 4; stroke-linecap: round; }
+.arc.clear { stroke: var(--keep); }
+.arc.found { stroke: var(--retake); stroke-width: 12; }
+.arc.minor { stroke: var(--retake); stroke-width: 4; }
+.arc.off { stroke: var(--away); stroke-dasharray: 3 9; }
+.arc-label { fill: var(--ink-2); font-size: 26px; font-weight: 600; }
+.arc-label.found { fill: var(--retake); }
+.rim { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 6 8; }
+.has-photo .rim { stroke-dasharray: none; stroke: #0000; }
+.pos-disc { fill: none; stroke: var(--ink); stroke-width: 3; }
+.pos-macula { fill: var(--ink); stroke: var(--room); stroke-width: 2; }
+.pos-zone { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 7; opacity: 0.8; }
+.pos-label { fill: var(--ink); font-size: 18px; font-weight: 600; paint-order: stroke; stroke: var(--room); stroke-width: 4px; }
+.scan { fill: none; stroke: var(--focus); stroke-width: 4; stroke-linecap: round; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.checking .scan { opacity: 1; animation: spin 1.1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.drawn .arc { animation: draw 0.7s ease-out both; }
+@keyframes draw { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .checking .scan { animation: none; stroke-dasharray: 40 1000; }
+  .drawn .arc { animation: none; }
+}
+
+.drop {
+  position: absolute; inset: 11.5% 19.7%; border-radius: 50%; display: grid; place-content: center; gap: 14px;
+  text-align: center; cursor: pointer; padding: 12%;
+}
+.drop .lead { font-size: 21px; font-weight: 600; }
+.drop .btn {
+  justify-self: center; background: var(--ink); color: var(--room); font-weight: 800; border-radius: 999px; padding: 10px 22px;
+}
+.has-photo .drop { opacity: 0; background: rgba(23, 28, 34, 0.78); transition: opacity 0.15s; }
+.has-photo .drop:hover, .has-photo .drop:focus-within, .dragging .drop { opacity: 1; }
+.dragging .rim { stroke: var(--focus); stroke-dasharray: none; }
+.error { color: var(--retake); min-height: 1.5em; margin: 12px 0 0; text-align: center; }
+
+.samples h2, .session h2, .result h3 { font-size: 15px; font-weight: 600; color: var(--ink-2); margin: 0 0 10px; }
+.thumbs { display: flex; gap: 10px; flex-wrap: wrap; }
+.thumbs button {
+  width: 56px; height: 56px; padding: 0; border-radius: 50%; overflow: hidden; border: 2px solid var(--line);
+  background: #000; cursor: pointer;
+}
+.thumbs button:hover { border-color: var(--ink-2); }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumbs .keep { border-color: var(--keep); }
+.thumbs .retake { border-color: var(--retake); }
+.thumbs .not_fundus { border-color: var(--away); border-style: dashed; }
+
+/* ---- result ---- */
+.result { min-height: 200px; }
+.idle h1 { font-size: 33px; line-height: 1.2; margin: 8px 0 12px; font-weight: 800; letter-spacing: -0.015em; }
+.idle p { color: var(--ink-2); max-width: 46ch; margin: 0 0 12px; }
+.verdict { display: flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 800; margin: 4px 0 6px; }
+.verdict svg { width: 26px; height: 26px; flex: none; }
+.v-keep .verdict { color: var(--keep); }
+.v-retake .verdict { color: var(--retake); }
+.v-not_fundus .verdict { color: var(--away); }
+.instruction { font-size: clamp(26px, 3.2vw, 34px); line-height: 1.22; font-weight: 800; letter-spacing: -0.012em; margin: 0 0 10px; max-width: 24ch; }
+.source { color: var(--ink-2); font-size: 14px; margin: 0 0 28px; }
+.rows { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 10px 18px; align-items: baseline; }
+.rows dt { color: var(--ink-2); }
+.rows dd { margin: 0; }
+.rows .found { color: var(--retake); font-weight: 600; }
+.meter { position: relative; height: 6px; border-radius: 3px; background: var(--line); margin-top: 6px; max-width: 260px; }
+.meter i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--ink-2); }
+.meter.found i { background: var(--retake); }
+.meter b { position: absolute; top: -4px; width: 2px; height: 14px; background: var(--ink); }
+.small { font-size: 14px; color: var(--ink-2); }
+.toggle { display: flex; gap: 10px; align-items: flex-start; margin-top: 26px; font-size: 15px; color: var(--ink-2); max-width: 52ch; }
+.toggle input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--keep); }
+
+.session { border-top: 1px solid var(--line); padding-top: 18px; }
+.session .count { color: var(--ink-2); font-size: 15px; margin: -4px 0 12px; }
+footer { padding: 8px clamp(16px, 4vw, 40px) 32px; color: var(--ink-2); font-size: 14px; max-width: 1150px; margin: 0 auto; }
+footer p { margin: 4px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div class="mark">
+    <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="none" stroke="#63c29e" stroke-width="2.4"/>
+      <circle cx="13" cy="13" r="4" fill="#f4b740"/></svg>
+    Retake Coach
+  </div>
+  <div class="status" aria-live="polite">
+    <span>Detector: <b>DINOv2 on this computer</b></span>
+    <span id="wording-status">Instructions: <b>checking…</b></span>
+  </div>
+</header>
+
+<main>
+  <section class="photo" aria-label="Photo">
+    <div class="viewfinder" id="vf">
+      <svg viewBox="-80 -10 660 520" aria-hidden="true">
+        <defs><clipPath id="disc"><circle cx="250" cy="250" r="200"/></clipPath></defs>
+        <circle class="rim" cx="250" cy="250" r="200"/>
+        <image id="photo" x="50" y="50" width="400" height="400" clip-path="url(#disc)" preserveAspectRatio="xMidYMid slice"/>
+        <g id="arcs"></g>
+        <g id="positions"></g>
+        <circle class="scan" cx="250" cy="250" r="222" stroke-dasharray="90 1300"/>
+      </svg>
+      <label class="drop" for="file">
+        <span class="lead" id="drop-lead">Drop the photo you just took</span>
+        <span class="btn">Choose a photo</span>
+      </label>
+      <input class="sr" type="file" id="file" accept="image/*">
+    </div>
+    <p class="error" id="error" role="alert"></p>
+  </section>
+  <section class="samples" id="samples" hidden>
+    <h2>Sample photos</h2>
+    <div class="thumbs" id="sample-thumbs"></div>
+  </section>
+
+  <section class="result idle" id="result" aria-live="polite">
+    <h1>Check each fundus photo before the patient leaves the chair.</h1>
+    <p>Retake Coach says whether the photo is good enough to grade. If it isn't, it tells you what to fix: focus, aim, or something blocking the view.</p>
+    <p>It checks photo quality only. It does not look for disease.</p>
+  </section>
+
+  <section class="session" id="session" hidden>
+    <h2>This session</h2>
+    <p class="count" id="session-count"></p>
+    <div class="thumbs" id="session-thumbs"></div>
+  </section>
+</main>
+
+<footer>
+  <p>Detector: Meta's DINOv2 image features with small heads trained on DeepDRiD photo-quality labels (CC BY-SA 4.0). It runs on this computer.</p>
+  <p>Instructions: Muse Spark through the Meta Model API, under a daily spending cap. Without it, standard instructions are used.</p>
+</footer>
+
+<script>
+const PROBLEMS = { focus: [-56, 56], aim: [64, 176], obstruction: [184, 296] };
+const WORDS = {
+  focus: ['Blurry', 'Sharp'], aim: ['Off centre', 'Centred'], obstruction: ['Shadow or glare', 'Clear view']
+};
+const NAMES = { focus: 'Focus', aim: 'Aim', obstruction: 'Obstruction' };
+const ICONS = {
+  keep: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="11" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M8 13.5l3.4 3.4L18.5 9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  retake: '<svg viewBox="0 0 26 26"><path d="M13 2.5l11 19.5H2z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 10v5.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="13" cy="18.8" r="1.5" fill="currentColor"/></svg>',
+  not_fundus: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-dasharray="4 3"/><path d="M9 9l8 8M17 9l-8 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>'
+};
+const HEAD = { keep: 'Keep', retake: 'Retake', not_fundus: 'Not a fundus photo' };
+const $ = id => document.getElementById(id);
+const vf = $('vf'), result = $('result');
+let session = [], useMuse = true, museAvailable = false;
+
+function polar(r, deg) { const a = (deg - 90) * Math.PI / 180; return [250 + r * Math.cos(a), 250 + r * Math.sin(a)]; }
+function arcPath(r, a0, a1) {
+  const [x0, y0] = polar(r, a0), [x1, y1] = polar(r, a1);
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+}
+function drawArcs(states) {           // states: {focus: 'found'|'clear'|'off'|''}
+  const g = $('arcs'); g.innerHTML = '';
+  for (const [k, [a0, a1]] of Object.entries(PROBLEMS)) {
+    const len = (Math.PI * 222 * (a1 - a0) / 180).toFixed(0);
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', arcPath(222, a0, a1));
+    p.setAttribute('class', 'arc ' + (states[k] || ''));
+    p.style.setProperty('--len', len); p.style.strokeDasharray = states[k] === 'off' ? '' : `${len} ${len}`;
+    g.appendChild(p);
+    const mid = (a0 + a1) / 2, [x, y] = polar(250, mid);
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', x.toFixed(1)); t.setAttribute('y', (y + 6).toFixed(1));
+    t.setAttribute('text-anchor', Math.abs(Math.sin(mid * Math.PI / 180)) < 0.3 ? 'middle' : (x > 250 ? 'start' : 'end'));
+    t.setAttribute('class', 'arc-label ' + (states[k] === 'found' ? 'found' : ''));
+    t.textContent = NAMES[k];
+    g.appendChild(t);
+  }
+}
+drawArcs({});
+
+function drawPositions(r) {          // measured optic disc (ring) and macula (dot); the 2-disc-diameter zone when aim is off
+  const g = $('positions'); g.innerHTML = '';
+  if (r.verdict === 'not_fundus' || !r.dd) return;
+  const ns = 'http://www.w3.org/2000/svg', at = ([u, v]) => [50 + 400 * u, 50 + 400 * v];
+  const add = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); g.appendChild(e); return e; };
+  if (r.checks.aim.found || r.checks.aim.minor) add('circle', { cx: 250, cy: 250, r: 800 * r.dd, class: 'pos-zone' });
+  if (r.disc) { const [x, y] = at(r.disc); add('circle', { cx: x, cy: y, r: 200 * r.dd, class: 'pos-disc' }); }
+  if (r.macula) { const [x, y] = at(r.macula); add('circle', { cx: x, cy: y, r: 7, class: 'pos-macula' }); }
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function money(x) { return x === 0 ? '$0' : '$' + (x < 0.01 ? x.toFixed(4) : x.toFixed(2)); }
+
+function setStatus(b) {
+  museAvailable = b.muse;
+  const el = $('wording-status');
+  if (!b.muse) el.innerHTML = 'Instructions: <b>standard (no Muse Spark key)</b>';
+  else if (!b.can_call) el.innerHTML = `Instructions: <b>standard (today's Muse Spark cap reached)</b>`;
+  else el.innerHTML = `Instructions: <b>Muse Spark</b>, ${money(b.spent_today)} of ${money(b.cap_today)} used today`;
+}
+
+function render(r, note) {
+  vf.classList.remove('checking'); vf.classList.add('has-photo');
+  $('photo').setAttribute('href', r.preview);
+  $('drop-lead').textContent = 'Drop or choose another photo';
+  const states = {};
+  for (const k of Object.keys(PROBLEMS)) states[k] = r.verdict === 'not_fundus' ? 'off' : (r.checks[k].found ? 'found' : r.checks[k].minor ? 'minor' : 'clear');
+  vf.classList.remove('drawn'); void vf.offsetWidth; vf.classList.add('drawn');
+  drawArcs(states);
+  drawPositions(r);
+
+  let rows = '';
+  if (r.verdict !== 'not_fundus') {
+    for (const k of Object.keys(PROBLEMS)) {
+      const c = r.checks[k], found = c.found, flagged = c.found || c.minor;
+      rows += `<dt>${NAMES[k]}</dt><dd><span class="${found ? 'found' : ''}">${WORDS[k][flagged ? 0 : 1]}${c.minor ? ' (still gradable)' : ''}</span>
+        <span class="small">score ${c.score.toFixed(2)}, flagged from ${c.threshold.toFixed(2)}</span>
+        <div class="meter ${found ? 'found' : ''}" aria-hidden="true"><i style="width:${(100 * c.score).toFixed(0)}%"></i><b style="left:${(100 * c.threshold).toFixed(0)}%"></b></div></dd>`;
+    }
+    rows += r.rule === 'problems'
+      ? `<dt>Overall</dt><dd>Quality score ${r.p_not_good.toFixed(2)} <span class="small">for reference; a retake is asked only for a problem above</span></dd>`
+      : `<dt>Overall</dt><dd>${r.p_not_good >= r.retake_threshold ? 'Not good enough to grade' : 'Good enough to grade'}
+      <span class="small">score ${r.p_not_good.toFixed(2)}, retake from ${r.retake_threshold.toFixed(2)}</span></dd>`;
+  }
+  rows += `<dt>Fundus photo</dt><dd>${r.verdict === 'not_fundus' ? 'No, unlike the photos it knows' : 'Yes'}
+    <span class="small">energy ${r.energy.toFixed(1)}, turned away above ${r.energy_limit.toFixed(1)}</span></dd>
+    <dt>Time</dt><dd>Checked in ${r.ms.detect} ms${r.ms.wording > 50 ? `, instruction in ${(r.ms.wording / 1000).toFixed(1)} s` : ''}</dd>`;
+  if (r.positions && r.verdict !== 'not_fundus' && (r.checks.aim.found || r.checks.aim.minor)) rows += `<dt>Positions</dt><dd>${esc(r.positions[0].toUpperCase() + r.positions.slice(1))}
+    <span class="small">measured on the photo: ring = optic disc, dot = macula</span></dd>`;
+  if (note) rows += `<dt>Sample</dt><dd>${esc(note.name)} ${note.text ? `<span class="small">${esc(note.text)}</span>` : ''}</dd>`;
+
+  const src = r.source === 'muse-spark' ? `Written by Muse Spark for ${money(r.cost)}`
+            : r.source.startsWith('template (') ? `Standard instruction: ${esc(r.source.slice(10, -1))}`
+            : r.verdict === 'retake' ? 'Standard instruction' : '';
+  result.className = 'result v-' + r.verdict;
+  result.innerHTML = `
+    <div class="verdict">${ICONS[r.verdict]}<span>${HEAD[r.verdict]}</span></div>
+    <p class="instruction">${esc(r.instruction)}</p>
+    <p class="source">${src}</p>
+    <h3>What the check saw</h3>
+    <dl class="rows">${rows}</dl>
+    <label class="toggle"><input type="checkbox" id="muse" ${useMuse ? 'checked' : ''} ${museAvailable ? '' : 'disabled'}>
+      <span>Word retake instructions with Muse Spark. This sends a retake photo to the Meta Model API. When it's off, standard instructions are used.</span></label>`;
+  $('muse').addEventListener('change', e => { useMuse = e.target.checked; });
+  setStatus(r.budget);
+}
+
+function addToSession(r, note) {
+  session.unshift({ r, note });
+  $('session').hidden = false;
+  const n = session.length, re = session.filter(s => s.r.verdict === 'retake').length;
+  const away = session.filter(s => s.r.verdict === 'not_fundus').length;
+  $('session-count').textContent = `${n} checked, ${n - re - away} kept, ${re} to retake` + (away ? `, ${away} not ${away === 1 ? 'a fundus photo' : 'fundus photos'}` : '');
+  const box = $('session-thumbs'); box.innerHTML = '';
+  session.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = s.r.verdict; b.title = HEAD[s.r.verdict];
+    b.setAttribute('aria-label', `Photo ${n - i}: ${HEAD[s.r.verdict]}`);
+    b.innerHTML = `<img alt="" src="${s.r.preview}">`;
+    b.addEventListener('click', () => render(s.r, s.note));
+    box.appendChild(b);
+  });
+}
+
+async function check(blob, note) {
+  $('error').textContent = '';
+  vf.classList.add('checking');
+  if (!vf.classList.contains('has-photo')) {
+    vf.classList.add('has-photo'); $('photo').setAttribute('href', URL.createObjectURL(blob));
+  }
+  const fd = new FormData(); fd.append('photo', blob, blob.name || 'photo.jpg'); fd.append('use_muse', useMuse);   // the server decides whether Muse Spark is available
+  try {
+    const res = await fetch('/api/check', { method: 'POST', body: fd });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.detail || 'The check did not finish. Try the photo again.');
+    render(body, note); addToSession(body, note);
+  } catch (e) {
+    vf.classList.remove('checking');
+    if (!session.length) { vf.classList.remove('has-photo'); $('photo').removeAttribute('href'); }
+    $('error').textContent = e.message.includes('fetch') ? 'The check server is not reachable. Make sure app.py is running.' : e.message;
+  }
+}
+
+$('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) check(f, ''); e.target.value = ''; });
+['dragenter', 'dragover'].forEach(t => vf.addEventListener(t, e => { e.preventDefault(); vf.classList.add('dragging'); }));
+['dragleave', 'drop'].forEach(t => vf.addEventListener(t, e => { e.preventDefault(); vf.classList.remove('dragging'); }));
+vf.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) check(f, ''); });
+
+fetch('/api/status').then(r => r.json()).then(s => setStatus(s.budget)).catch(() => {
+  $('wording-status').innerHTML = 'Instructions: <b>server not reachable</b>';
+});
+fetch('/api/examples').then(r => r.json()).then(list => {
+  if (!list.length) return;
+  $('samples').hidden = false;
+  for (const ex of list) {
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', `Check sample photo ${ex.name}`); b.title = ex.name;
+    b.innerHTML = `<img alt="" loading="lazy" src="/examples/${encodeURIComponent(ex.name)}">`;
+    b.addEventListener('click', async () => {
+      const blob = await (await fetch('/examples/' + encodeURIComponent(ex.name))).blob();
+      blob.name = ex.name; check(blob, { name: ex.name.replace(/\.[^.]+$/, ''), text: ex.note });
+    });
+    $('sample-thumbs').appendChild(b);
+  }
+}).catch(() => {});
+</script>
+</body>
+</html>
