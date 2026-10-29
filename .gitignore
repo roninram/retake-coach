@@ -1,0 +1,27 @@
+# Keys: this repository is public
+.env
+*.key
+
+# Dataset images stay out (download them under their own licences); result figures are the exception
+*.jpg
+*.jpeg
+*.png
+*.tif
+*.tiff
+!results/*.png
+!docs/*.png
+examples/
+data/
+quality/
+A. Segmentation/
+B. Disease Grading/
+C. Localization/
+sam_out/
+
+# Large weights (the small fitted models in models/ are kept)
+*.pt
+*.pth
+*.ckpt
+
+__pycache__/
+.ipynb_checkpoints/
