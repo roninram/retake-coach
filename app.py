@@ -317,7 +317,10 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
         results = payload.get("results")
         if not isinstance(results, list) or len(results) > 5000:
             raise HTTPException(400, "Send the session's results as a list.")
-        facts = cc.session_facts([r for r in results if isinstance(r, dict)])
+        results = [r for r in results if isinstance(r, dict)]
+        if payload.get("scope") == "batch":     # a batch can mix patients: which views are missing means nothing there
+            results = [dict(r, eye=None, field=None) for r in results]
+        facts = cc.session_facts(results)
         fallback = cc.note_template(facts)
         if payload.get("use_muse", True) and facts["n"]:
             with checker.wlock:

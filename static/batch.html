@@ -214,7 +214,7 @@ const slim = r => ({ verdict: r.verdict, problems: r.problems || [], eye: r.eye 
 async function coachNote(results, box, btn) {
   const label = btn.textContent; btn.disabled = true; btn.textContent = 'Writing…';
   try {
-    const res = await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ results: results.map(slim) }) });
+    const res = await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ results: results.map(slim), scope: 'batch' }) });
     const b = await res.json();
     if (!res.ok) throw new Error(b.detail || 'failed');
     const src = b.source === 'muse-spark' ? `Written by Muse Spark for ${money(b.cost)}. No photos were sent.`
