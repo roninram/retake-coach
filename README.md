@@ -50,7 +50,8 @@ photos look like (`notebooks/8_eyer_check.ipynb`, written for the Phelcom Eyer2 
 
 Everything that looks at the photo runs on the camera's computer, and the photo stays there. Muse Spark gets only the
 session's counts in words, such as "Problems on the photos sent back: obstruction 3 (dark shadow toward the top of the
-photo 2; glare or haze in the centre of the photo 1), focus 1". The page shows exactly what it was given. It also gets the standard
+photo 2; glare or haze in the centre of the photo 1), focus 1". The page shows exactly what it was given. (While free credits are in use, Meta may use what is sent for
+product improvement: one more reason to send counts, never photos.) It also gets the standard
 advice for each problem found, and must use only that advice. If the note contains a number that is not in those
 counts, a fixed summary of the same counts is shown instead; the same happens past the cap or on any error.
 
@@ -260,7 +261,9 @@ IntelliSys 2026 paper. That code is not included or needed for Retake Coach. See
 [experiments/README.md](experiments/README.md) for the directions we tried first, with their results, including what
 did not work.
 
-Total Meta Model API spend for the whole event, experiments included, was under $3.
+Meta Model API spend for the whole event so far, experiments included: $2.79 of the $150 hackathon credit, over about
+1,100 requests (dev.meta.ai billing and dashboard, Oct 29, 2026). Every paid call ran under a hard request and dollar
+cap.
 
 ## Data and licences
 
