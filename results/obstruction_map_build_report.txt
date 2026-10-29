@@ -1,0 +1,32 @@
+Saved quality/obstruction_map.npz (facebook/dinov3-vitb16-pretrain-lvd1689m): typical map and marking level from 191 artifact-0 validation photos.
+On artifact-0 photos the marked area stays under 5.4% of the retina for 95% of them. The app runs the map only after the check asks for an obstruction retake, and names the marked area that holds the strongest spot.
+Time to map one photo on this runtime: 93 ms
+
+== Pasted shadows and glare (40 each, about a fifth of the photo across) ==
+shadow: a place was given for 35: the right place 24, the next side over 6, farther off 0, "most of the photo" 0, other 5. Called darker: 33; called brighter: 1; neither: 6
+glare: a place was given for 28: the right place 17, the next side over 6, farther off 0, "most of the photo" 0, other 5. Called brighter: 25; called darker: 2; neither: 13
+
+== Validation photos sent back for an obstruction: 125 of 400 ==
+A place was given for 123 ("most of the photo" for 17). Darker: 82; brighter: 19; neither: 24.
+          photos  place_given
+artifact                     
+0              6            5
+1              1            1
+4             24           24
+6             48           48
+8             36           35
+10            10           10
+
+== Muse Spark, words only (no photo sent) ==
+10 of 10 worded by Muse Spark; $0.0281 in total, about $0.0028 a retake
+image_id          problems                                                                                                                                                                                                                         facts_sent                                                                                                                                                    muse_spark
+  296_r2 obstruction focus                                                                                                           Measured where the obstruction is: an area darker than the rest in the centre of the photo, covering a large part of it.    Retake for darker-than-rest central area covering large part by opening wide, lifting eyelid if needed, centring on pupil, refocusing small vessels sharp.
+  300_l2 obstruction focus                                                                                                                                Measured where the obstruction is: an area brighter or hazier than the rest over most of the photo.      Wipe lens and adjust working distance until brighter or hazier area than rest over most of photo clears, refocus until small vessels look sharp, retake.
+  321_r1 obstruction focus                                                                                                         Measured where the obstruction is: an area darker than the rest toward the left of the photo, covering a small part of it.         Ask patient to open wide, lift eyelid if needed, centre on pupil for shadow toward left covering small part, refocus small vessels sharp then retake.
+  349_r1 focus obstruction                                                                                           Measured where the obstruction is: an area brighter or hazier than the rest toward the bottom of the photo, covering a small part of it.                          Refocus until small vessels look sharp, wipe lens and adjust working distance until haze toward bottom of photo clears, then retake.
+  361_r1 obstruction focus                                                                                                    Measured where the obstruction is: an area darker than the rest toward the bottom of the photo, covering about a quarter of it.                  Retake showing darker area toward bottom covering about quarter, lift eyelid, open wide, centre on pupil, refocus until small vessels sharp.
+  385_r2       obstruction                                                                                       Measured where the obstruction is: an area brighter or hazier than the rest toward the lower left of the photo, covering a small part of it.                                         Wipe the lens and adjust the working distance to clear glare or haze toward the lower left of the photo, then retake.
+  265_r2             focus                                                                                                                                                                                                                             (none)                                                                                                      Refocus until the small vessels look sharp, then retake.
+  300_r2             focus                                                                                                                                                                                                                             (none)                                                                                                      Refocus until small vessels look sharp then retake photo
+  267_l1   aim obstruction Measured positions in the picture: the optic disc is near the centre; the macula is near the centre. | Measured where the obstruction is: an area darker than the rest toward the right of the photo, covering a small part of it. Reaim keeping optic disc near centre and macula near centre for dark shadow toward right covering small part, open wide lifting eyelid, centre pupil, retake.
+  267_r1               aim                                                                                                                            Measured positions in the picture: the optic disc is near the centre; the macula is not in the picture.                                              Re-aim so the optic disc near the centre and the macula not in the picture are both near the centre then retake.

@@ -51,7 +51,8 @@ Every SAM run had a hard request cap.
 `glimmer_energy_pilot.ipynb`
 
 On an MMLU pilot with Muse Glimmer 30B, the free energy of the answer logits separated right from wrong answers only
-weakly (`results/glimmer_mmlu_pilot.csv`).
+weakly (`results/glimmer_mmlu_pilot.csv`). Muse Glimmer is not part of Retake Coach: at 30B parameters it needs a
+data-centre GPU, and everything that looks at a photo runs on the computer next to the camera.
 
 ## 5. Can energies trained on synthetic damage judge real photo quality?
 

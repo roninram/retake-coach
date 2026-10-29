@@ -1,0 +1,26 @@
+== 1. Energy by kind of input (limit 6.93; above it the photo is turned away) ==
+                                        input  photos  median  lowest  highest turned_away
+                  DeepDRiD test fundus photos     400    1.00    0.51     5.98          0%
+IDRiD photos 300+ (not used to fit the guard)     297    1.01    0.32     3.97          0%
+                    fundus photo from the web       1    1.81    1.81     1.81          0%
+                    DeepDRiD widefield photos      50   23.88   16.75    53.54        100%
+          everyday pictures and a black frame      13  185.92   74.50   209.98        100%
+
+IDRiD photos with synthetic damage, median energy by kind of damage: aim 4.65, exposure 2.68, focus 3.75, obstruction 2.56
+
+== 2. Label-free quality: does the energy rank bad photos higher? (DeepDRiD test, 400 photos) ==
+                    problem  photos_with_it  AUROC_energy_alone  AUROC_trained_check
+    not good enough overall             220               0.719                0.823
+       focus (clarity <= 6)             145               0.768                0.903
+aim (field definition <= 6)              77               0.539                0.851
+obstruction (artifact >= 6)             123               0.803                0.945
+The energy never saw a quality label; the trained checks did.
+
+== 3. Does the energy tell when the retake decision is wrong? ==
+Decisions that disagree with DeepDRiD's label: 100 of 400. AUROC for spotting them: energy 0.45; the check's own distance from its threshold 0.69. 0.50 is chance.
+                 photos  not_good_enough  sent_back  decision_wrong
+energy                                                             
+lowest quarter      100             0.32       0.13            0.27
+second              100             0.48       0.42            0.26
+third               100             0.61       0.63            0.32
+highest quarter     100             0.79       0.86            0.15

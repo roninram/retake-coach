@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retake Coach: many photos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --room: #171c22; --panel: #202830; --line: #34414d; --ink: #e6ebf0; --ink-2: #9eacba;
+  --keep: #63c29e; --retake: #f4b740; --away: #aab5c2; --focus: #8fc1ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--room); color: var(--ink); }
+body { font-family: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif; font-size: 17px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 18px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--line); }
+.left { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.mark { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 21px; letter-spacing: -0.01em; }
+.mark svg { width: 26px; height: 26px; }
+nav { display: flex; gap: 6px; font-size: 15px; }
+nav a { color: var(--ink-2); text-decoration: none; padding: 4px 2px; margin: 0 8px 0 0; border-bottom: 2px solid transparent; }
+nav a:hover { color: var(--ink); }
+nav a[aria-current] { color: var(--ink); border-bottom-color: var(--keep); }
+.status { display: flex; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); }
+.status span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.status b { color: var(--ink); font-weight: 600; }
+
+main { max-width: 1160px; margin: 0 auto; padding: clamp(20px, 4vw, 44px) clamp(16px, 4vw, 40px); }
+h1 { font-size: 33px; line-height: 1.2; margin: 0 0 10px; font-weight: 800; letter-spacing: -0.015em; }
+.lead { color: var(--ink-2); max-width: 64ch; margin: 0 0 24px; }
+.drop { border: 2px dashed var(--line); border-radius: 18px; padding: 28px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.drop.dragging { border-color: var(--focus); border-style: solid; }
+.drop .lead2 { font-size: 21px; font-weight: 600; margin-right: auto; }
+.btn { background: var(--ink); color: var(--room); font: inherit; font-weight: 800; border: 0; border-radius: 999px; padding: 10px 20px; cursor: pointer; }
+.btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line); font-weight: 600; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.options { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin: 16px 0 26px; font-size: 15px; color: var(--ink-2); }
+.options label { display: flex; gap: 8px; align-items: center; }
+.options input { width: 18px; height: 18px; accent-color: var(--keep); }
+.watch { border-left: 4px solid var(--keep); padding: 8px 14px; margin: 0 0 22px; background: var(--panel); border-radius: 0 10px 10px 0; }
+.watch code { color: var(--ink); }
+.summary { font-size: 19px; margin: 0 0 14px; }
+.summary .k { color: var(--keep); font-weight: 600; } .summary .r { color: var(--retake); font-weight: 600; }
+.progress { color: var(--ink-2); font-size: 15px; min-height: 1.5em; }
+table.results { width: 100%; border-collapse: collapse; font-size: 15px; }
+.results th { text-align: left; color: var(--ink-2); font-weight: 600; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); }
+.results td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.results img { width: 44px; height: 44px; border-radius: 50%; display: block; object-fit: cover; border: 2px solid var(--line); }
+.results tr.keep img { border-color: var(--keep); } .results tr.retake img { border-color: var(--retake); }
+.results tr.not_fundus img { border-color: var(--away); border-style: dashed; }
+.chip { font-weight: 600; white-space: nowrap; }
+.keep .chip { color: var(--keep); } .retake .chip { color: var(--retake); } .not_fundus .chip, .unreadable .chip { color: var(--away); }
+.file { color: var(--ink-2); word-break: break-all; max-width: 18ch; }
+.what { max-width: 52ch; }
+.empty { color: var(--ink-2); padding: 18px 0; }
+.fname { display: none; color: var(--ink-2); font-weight: 400; font-size: 13px; word-break: break-all; }
+.watch code { word-break: break-all; }
+@media (max-width: 760px) {
+  .results .eye, .results .time, .results .file { display: none; }
+  .fname { display: block; }
+}
+.note { margin: 16px 0 6px; background: var(--panel); border-left: 4px solid var(--keep); border-radius: 0 10px 10px 0; padding: 12px 16px; max-width: 72ch; }
+.note p { margin: 0; }
+.note .src { color: var(--ink-2); font-size: 14px; margin-top: 6px; }
+.note details { margin-top: 6px; font-size: 14px; color: var(--ink-2); }
+.note summary { cursor: pointer; }
+.note pre { white-space: pre-wrap; font: inherit; margin: 6px 0 0; }
+footer { max-width: 1160px; margin: 0 auto; padding: 8px clamp(16px, 4vw, 40px) 32px; color: var(--ink-2); font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="left">
+    <div class="mark">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="none" stroke="#63c29e" stroke-width="2.4"/><circle cx="13" cy="13" r="4" fill="#f4b740"/></svg>
+      Retake Coach
+    </div>
+    <nav aria-label="Pages"><a href="/">One photo</a><a href="/batch" aria-current="page">Many photos</a></nav>
+  </div>
+  <div class="status" aria-live="polite">
+    <span id="detector-status">Detector: <b>DINOv2 on this computer</b></span>
+    <span id="wording-status">Coach's note: <b>checking…</b></span>
+  </div>
+</header>
+
+<main>
+  <h1>Check a batch of photos</h1>
+  <p class="lead">Drop the photos from a clinic session, or a whole folder. Each one gets keep or retake and a line on what to fix, so the ones to redo are clear before the photos go to a grader.</p>
+
+  <div class="drop" id="drop">
+    <span class="lead2">Drop photos or a folder here</span>
+    <label class="btn" for="files" tabindex="0">Choose photos</label>
+    <label class="btn ghost" for="folder" tabindex="0">Choose a folder</label>
+    <input class="sr" type="file" id="files" accept="image/*" multiple>
+    <input class="sr" type="file" id="folder" webkitdirectory multiple>
+  </div>
+  <div class="options">
+    <button class="btn ghost" id="note-btn" type="button" disabled>Coach's note</button>
+    <button class="btn ghost" id="csv" type="button" disabled>Download CSV</button>
+    <button class="btn ghost" id="clear" type="button" disabled>Clear list</button>
+  </div>
+
+  <p class="watch" id="watch" hidden></p>
+  <p class="summary" id="summary"></p>
+  <div class="note" id="note" aria-live="polite" hidden></div>
+  <p class="progress" id="progress" aria-live="polite"></p>
+  <table class="results">
+    <thead><tr><th><span class="sr">Photo</span></th><th class="file">File</th><th>Result</th><th>What to fix</th><th class="eye">Eye</th><th class="eye">Centred on</th><th class="time">Checked</th></tr></thead>
+    <tbody id="rows"><tr><td colspan="7" class="empty">Nothing checked yet.</td></tr></tbody>
+  </table>
+</main>
+
+<footer>Checks photo quality only. It does not look for disease. Detection runs on this computer, and photos stay on it. The coach's note is written by Muse Spark (Meta Model API) from this session's counts in words.</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const IMAGE = /\.(jpe?g|png|tiff?|bmp|webp)$/i;
+const HEAD = { keep: 'Keep', retake: 'Retake', not_fundus: 'Not a fundus photo', unreadable: 'Unreadable' };
+let rows = [], queue = [], busy = false, watchedSince = 0;
+
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function money(x) { return x === 0 ? '$0' : '$' + (x < 0.01 ? x.toFixed(4) : x.toFixed(2)); }
+function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : '—'; }
+
+function setStatus(b) {
+  const el = $('wording-status');
+  if (!b.muse) el.innerHTML = "Coach's note: <b>standard (no Muse Spark key)</b>";
+  else if (!b.can_call) el.innerHTML = "Coach's note: <b>standard (today's Muse Spark cap reached)</b>";
+  else el.innerHTML = `Coach's note: <b>Muse Spark</b>, ${money(b.spent_today)} of ${money(b.cap_today)} used today`;
+}
+
+function draw() {
+  const n = rows.length, k = rows.filter(r => r.verdict === 'keep').length, re = rows.filter(r => r.verdict === 'retake').length;
+  const away = n - k - re;
+  $('summary').innerHTML = n ? `${n} checked: <span class="k">${k} keep</span>, <span class="r">${re} retake</span>`
+    + (away ? `, ${away} not fundus photos or unreadable` : '') + '.' : '';
+  $('csv').disabled = !n; $('note-btn').disabled = !n; $('clear').disabled = !n; $('note').hidden = true;
+  $('rows').innerHTML = n ? rows.map(r => `<tr class="${r.verdict}">
+      <td>${r.preview ? `<img alt="" src="${r.preview}">` : ''}</td>
+      <td class="file">${esc(r.name)}</td>
+      <td class="chip">${HEAD[r.verdict] || r.verdict}<span class="fname">${esc(r.name)}</span></td>
+      <td class="what">${esc(r.instruction)}</td>
+      <td class="eye">${cap(r.eye)}</td><td class="eye">${r.field ? (r.field === 'disc' ? 'Optic disc' : 'Macula') : '—'}</td>
+      <td class="time">${esc(r.arrived || '')}</td></tr>`).join('')
+    : '<tr><td colspan="7" class="empty">Nothing checked yet.</td></tr>';
+}
+
+async function pump() {                      // one photo at a time, in the order dropped
+  if (busy) return; busy = true;
+  let done = 0;
+  while (queue.length) {
+    const f = queue.shift(); done++;
+    $('progress').textContent = `Checking ${f.name} (${queue.length} left)`;
+    const fd = new FormData(); fd.append('photo', f, f.name); fd.append('keep_in', 'batch'); fd.append('name', f.webkitRelativePath || f.name);
+    try {
+      const res = await fetch('/api/check', { method: 'POST', body: fd });
+      const body = await res.json().catch(() => ({}));
+      const r = res.ok ? body : { verdict: 'unreadable', instruction: body.detail || 'The check did not finish.' };
+      r.name = f.webkitRelativePath || f.name; r.arrived = new Date().toTimeString().slice(0, 8);
+      rows.unshift(r); if (r.budget) setStatus(r.budget);
+    } catch (e) {
+      rows.unshift({ name: f.name, verdict: 'unreadable', instruction: 'The check server is not reachable. Make sure app.py is running.' });
+    }
+    draw();
+  }
+  $('progress').textContent = done ? `Done: ${done} photo${done === 1 ? '' : 's'} checked.` : '';
+  busy = false;
+}
+
+function add(files) {
+  const imgs = [...files].filter(f => IMAGE.test(f.name));
+  if (!imgs.length) { $('progress').textContent = 'No photos found there. Use JPEG, PNG or TIFF files.'; return; }
+  queue.push(...imgs); pump();
+}
+
+async function walk(entry, out) {            // a dropped folder: read every file inside it
+  if (entry.isFile) return new Promise(res => entry.file(f => { out.push(f); res(); }, res));
+  const reader = entry.createReader();
+  for (;;) {
+    const batch = await new Promise(res => reader.readEntries(res, () => res([])));
+    if (!batch.length) break;
+    for (const e of batch) await walk(e, out);
+  }
+}
+
+$('files').addEventListener('change', e => { add(e.target.files); e.target.value = ''; });
+$('folder').addEventListener('change', e => { add(e.target.files); e.target.value = ''; });
+for (const l of document.querySelectorAll('label.btn')) l.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); l.click(); } });
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('dragging'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('dragging'); }));
+drop.addEventListener('drop', async e => {
+  const out = [], entries = [...e.dataTransfer.items].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (entries.length) { for (const en of entries) await walk(en, out); add(out); } else add(e.dataTransfer.files);
+});
+
+
+// The coach's note: only each result's verdict, problems, obstruction place and tone, eye and field are sent,
+// and the server passes only their counts in words to Muse Spark.
+const slim = r => ({ verdict: r.verdict, problems: r.problems || [], eye: r.eye || null, field: r.field || null,
+                     obstruction: r.obstruction ? { where: r.obstruction.where, tone: r.obstruction.tone } : null });
+async function coachNote(results, box, btn) {
+  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Writing…';
+  try {
+    const res = await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ results: results.map(slim) }) });
+    const b = await res.json();
+    if (!res.ok) throw new Error(b.detail || 'failed');
+    const src = b.source === 'muse-spark' ? `Written by Muse Spark for ${money(b.cost)}. No photos were sent.`
+              : `Standard summary${b.source.startsWith('template (') ? ` (${esc(b.source.slice(10, -1))})` : ''}.`;
+    box.innerHTML = `<p>${esc(b.note)}</p><p class="src">${src}</p>
+      <details><summary>What Muse Spark was given</summary><pre>${esc(b.facts)}</pre></details>`;
+    if (b.budget) setStatus(b.budget);
+  } catch (e) {
+    box.innerHTML = '<p>The note could not be written. Make sure app.py is running.</p>';
+  }
+  box.hidden = false; btn.textContent = label; btn.disabled = false;
+}
+
+$('note-btn').addEventListener('click', () => coachNote(rows, $('note'), $('note-btn')));
+
+$('csv').addEventListener('click', () => {
+  const cols = ['file', 'result', 'problems', 'what to fix', 'eye', 'centred on', 'score not good', 'focus', 'aim', 'obstruction', 'energy', 'wording'];
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = [cols.join(',')].concat(rows.map(r => [r.name, HEAD[r.verdict] || r.verdict, (r.problems || []).join(' '), r.instruction, r.eye, r.field,
+    r.p_not_good, r.checks?.focus?.score, r.checks?.aim?.score, r.checks?.obstruction?.score, r.energy, r.source].map(q).join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+  a.download = 'retake-coach-results.csv'; a.click();
+});
+
+async function poll() {                      // photos arriving in a watched folder (app.py --watch)
+  try {
+    const w = await (await fetch('/api/watch?since=' + watchedSince)).json();
+    if (w.folder) {
+      $('watch').hidden = false;
+      $('watch').innerHTML = `Watching <code>${esc(w.folder)}</code>. Photos the camera sends there appear here as they arrive.`;
+      if (w.results.length) { watchedSince = w.results[w.results.length - 1].seq + 1; rows.unshift(...w.results.reverse()); draw(); }
+      setTimeout(poll, 2000);
+    }
+  } catch (e) { setTimeout(poll, 5000); }
+}
+
+$('clear').addEventListener('click', () => {
+  rows = []; draw(); $('progress').textContent = '';
+  fetch('/api/clear?which=batch', { method: 'POST' }).catch(() => {});
+});
+
+// Coming back from the other page, or reloading: bring back the list checked so far.
+fetch('/api/state').then(r => r.json()).then(st => { if (st.batch.length) { rows = st.batch.slice().reverse().concat(rows); draw(); } })
+.catch(() => {}).then(() => fetch('/api/status')).then(r => r.json()).then(s => {
+  setStatus(s.budget); if (s.watching) poll();
+  if (s.obstruction_map && s.obstruction_map !== s.detector) $('detector-status').innerHTML = 'Detector: <b>DINOv2 + DINOv3 on this computer</b>';
+}).catch(() => {
+  $('wording-status').innerHTML = "Coach's note: <b>server not reachable</b>";
+});
+</script>
+</body>
+</html>

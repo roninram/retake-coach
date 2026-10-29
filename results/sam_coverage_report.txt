@@ -1,0 +1,15 @@
+stopping: cap reached (79 requests, $0.198)
+39 photos scored; 79 new SAM requests this run ($0.198); cached masks cost nothing
+
+== Share of the retina outlined, by DeepDRiD artifact score (median) ==
+          shadow_coverage  glare_coverage  coverage
+artifact                                           
+0                     0.0             0.0       0.0
+1                     0.0             0.0       0.0
+4                     0.0             0.0       0.0
+6                     0.0             0.0       0.0
+8                     0.0             0.0       0.0
+10                    0.0             0.0       0.0
+
+Spearman correlation, outlined share vs artifact score: nan (p = nan, n = 39)
+AUROC for artifact score >= 6 (a quarter of the photo or more): shadow_coverage 0.50, glare_coverage 0.50, coverage 0.50, obstruction head (Retake Coach) 0.93

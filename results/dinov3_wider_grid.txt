@@ -1,0 +1,19 @@
+== Quality heads and guard: DINOv2 vs DINOv3, regularization grid widened to C = 1.0 (DINOv3 had hit the old top, 0.05) ==
+                                                                                DINOv2 (base)                                  DINOv3 (ViT-B/16)
+retake: AUROC val                                                                       0.808                                              0.834
+retake: AUROC test                                                          0.826 (0.78-0.87)                                  0.811 (0.76-0.85)
+focus: AUROC val                                                                        0.898                                              0.898
+focus: AUROC test                                                           0.898 (0.86-0.93)                                  0.916 (0.88-0.94)
+aim: AUROC val                                                                          0.901                                              0.905
+aim: AUROC test                                                             0.855 (0.81-0.90)                                  0.860 (0.81-0.90)
+obstruction: AUROC val                                                                  0.954                                              0.954
+obstruction: AUROC test                                                     0.945 (0.92-0.96)                                  0.939 (0.91-0.96)
+bad photos caught (test)                                                                  75%                                                80%
+good photos sent back (test)                                                              25%                                                34%
+first named problem real (test)                                                           84%                                                90%
+IDRiD photos sent back                                                                    10%                                                 4%
+guard: fundus accepted                                                                   100%                                                99%
+guard: widefield + everyday turned away                                                  100%                                               100%
+regularization picked                    retake 0.002, focus 0.02, aim 0.02, obstruction 0.01  retake 0.05, focus 0.05, aim 0.2, obstruction 0.1
+
+Mean validation AUROC: DINOv2 0.890, DINOv3 0.898. Decision (rule set before running): keep DINOv2

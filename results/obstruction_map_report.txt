@@ -1,0 +1,32 @@
+
+== DINOv2: facebook/dinov2-base ==
+The map adds up to the patch part of the obstruction score: correlation 1.000 (1.000 = exact)
+How much of the check the map can show. AUROC for artifact score >= 6 on 400 validation photos: whole check 0.95; patch part alone (what the map shows) 0.94; class-token part alone 0.94
+Share of the retina the map marks (median), by artifact score. "Marked" is set so 1% of patches on artifact-0 photos are marked:
+          median  count
+Artifact               
+0          0.000    191
+1          0.006     18
+4          0.073     82
+6          0.099     60
+8          0.132     39
+10         0.168     10
+Spearman, marked share vs artifact score: 0.81 (p = 2e-93, n = 400); AUROC of the marked share for artifact >= 6: 0.91. SAM 3.1 marked nothing on any photo.
+Pasted shadow on 40 clean photos: the strongest spot lands on it in 37 (92%; chance 7%). The check flags 2 of 40 (the same photos untouched: 0 of 40).
+Pasted glare on 40 clean photos: the strongest spot lands on it in 21 (52%; chance 7%). The check flags 1 of 40 (the same photos untouched: 0 of 40).
+
+== DINOv3: facebook/dinov3-vitb16-pretrain-lvd1689m ==
+The map adds up to the patch part of the obstruction score: correlation 1.000 (1.000 = exact)
+How much of the check the map can show. AUROC for artifact score >= 6 on 400 validation photos: whole check 0.95; patch part alone (what the map shows) 0.94; class-token part alone 0.95
+Share of the retina the map marks (median), by artifact score. "Marked" is set so 1% of patches on artifact-0 photos are marked:
+          median  count
+Artifact               
+0          0.000    191
+1          0.004     18
+4          0.094     82
+6          0.188     60
+8          0.276     39
+10         0.679     10
+Spearman, marked share vs artifact score: 0.81 (p = 6.8e-93, n = 400); AUROC of the marked share for artifact >= 6: 0.91. SAM 3.1 marked nothing on any photo.
+Pasted shadow on 40 clean photos: the strongest spot lands on it in 34 (85%; chance 7%). The check flags 1 of 40 (the same photos untouched: 0 of 40).
+Pasted glare on 40 clean photos: the strongest spot lands on it in 32 (80%; chance 7%). The check flags 0 of 40 (the same photos untouched: 0 of 40).

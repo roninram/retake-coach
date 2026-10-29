@@ -37,6 +37,11 @@ header {
 }
 .mark { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 21px; letter-spacing: -0.01em; }
 .mark svg { width: 26px; height: 26px; }
+.left { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+nav { display: flex; gap: 6px; font-size: 15px; }
+nav a { color: var(--ink-2); text-decoration: none; padding: 4px 2px; margin: 0 8px 0 0; border-bottom: 2px solid transparent; }
+nav a:hover { color: var(--ink); }
+nav a[aria-current] { color: var(--ink); border-bottom-color: var(--keep); }
 .status { display: flex; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); }
 .status span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
 .status b { color: var(--ink); font-weight: 600; }
@@ -126,21 +131,41 @@ main {
 .toggle input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--keep); }
 
 .session { border-top: 1px solid var(--line); padding-top: 18px; }
-.session .count { color: var(--ink-2); font-size: 15px; margin: -4px 0 12px; }
+.session .count { color: var(--ink-2); font-size: 15px; margin: 14px 0 12px; }
+.visit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.ghost { background: none; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+.ghost:hover { border-color: var(--ink-2); }
+.visit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.note { margin: 16px 0 6px; background: var(--panel); border-left: 4px solid var(--keep); border-radius: 0 10px 10px 0; padding: 12px 16px; max-width: 72ch; }
+.note p { margin: 0; }
+.note .src { color: var(--ink-2); font-size: 14px; margin-top: 6px; }
+.note details { margin-top: 6px; font-size: 14px; color: var(--ink-2); }
+.note summary { cursor: pointer; }
+.note pre { white-space: pre-wrap; font: inherit; margin: 6px 0 0; }
+
+.visit { border-collapse: collapse; font-size: 15px; }
+.visit th { font-weight: 600; color: var(--ink-2); text-align: left; padding: 6px 18px 6px 0; }
+.visit td { padding: 6px 18px 6px 0; }
+.visit .kept { color: var(--keep); font-weight: 600; }
+.visit .retake { color: var(--retake); font-weight: 600; }
+.visit .none { color: var(--ink-2); }
 footer { padding: 8px clamp(16px, 4vw, 40px) 32px; color: var(--ink-2); font-size: 14px; max-width: 1150px; margin: 0 auto; }
 footer p { margin: 4px 0; }
 </style>
 </head>
 <body>
 <header>
-  <div class="mark">
-    <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="none" stroke="#63c29e" stroke-width="2.4"/>
-      <circle cx="13" cy="13" r="4" fill="#f4b740"/></svg>
-    Retake Coach
+  <div class="left">
+    <div class="mark">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="none" stroke="#63c29e" stroke-width="2.4"/>
+        <circle cx="13" cy="13" r="4" fill="#f4b740"/></svg>
+      Retake Coach
+    </div>
+    <nav aria-label="Pages"><a href="/" aria-current="page">One photo</a><a href="/batch">Many photos</a></nav>
   </div>
   <div class="status" aria-live="polite">
-    <span>Detector: <b>DINOv2 on this computer</b></span>
-    <span id="wording-status">Instructions: <b>checking…</b></span>
+    <span id="detector-status">Detector: <b>DINOv2 on this computer</b></span>
+    <span id="wording-status">Coach's note: <b>checking…</b></span>
   </div>
 </header>
 
@@ -151,6 +176,7 @@ footer p { margin: 4px 0; }
         <defs><clipPath id="disc"><circle cx="250" cy="250" r="200"/></clipPath></defs>
         <circle class="rim" cx="250" cy="250" r="200"/>
         <image id="photo" x="50" y="50" width="400" height="400" clip-path="url(#disc)" preserveAspectRatio="xMidYMid slice"/>
+        <image id="obstruction-layer" x="50" y="50" width="400" height="400" clip-path="url(#disc)" preserveAspectRatio="none"/>
         <g id="arcs"></g>
         <g id="positions"></g>
         <circle class="scan" cx="250" cy="250" r="222" stroke-dasharray="90 1300"/>
@@ -175,15 +201,17 @@ footer p { margin: 4px 0; }
   </section>
 
   <section class="session" id="session" hidden>
-    <h2>This session</h2>
+    <div class="visit-head"><h2>This visit</h2><div class="visit-actions"><button class="ghost" id="note-btn" type="button">Coach's note</button><button class="ghost" id="new-patient" type="button">New patient</button></div></div>
+    <table class="visit" id="visit" aria-label="Photos this visit needs"></table>
     <p class="count" id="session-count"></p>
+    <div class="note" id="note" aria-live="polite" hidden></div>
     <div class="thumbs" id="session-thumbs"></div>
   </section>
 </main>
 
 <footer>
-  <p>Detector: Meta's DINOv2 image features with small heads trained on DeepDRiD photo-quality labels (CC BY-SA 4.0). It runs on this computer.</p>
-  <p>Instructions: Muse Spark through the Meta Model API, under a daily spending cap. Without it, standard instructions are used.</p>
+  <p>Detector: Meta's DINOv2 image features with small heads trained on DeepDRiD photo-quality labels (CC BY-SA 4.0). Where an obstruction is: DINOv3 patch features, when installed. Both run on this computer, and photos stay on it.</p>
+  <p>Instructions are standard sentences built from what was measured. The coach's note is written by Muse Spark through the Meta Model API from the visit's counts in words, never photos, under a daily spending cap; without it, a standard summary is shown.</p>
 </footer>
 
 <script>
@@ -200,7 +228,7 @@ const ICONS = {
 const HEAD = { keep: 'Keep', retake: 'Retake', not_fundus: 'Not a fundus photo' };
 const $ = id => document.getElementById(id);
 const vf = $('vf'), result = $('result');
-let session = [], useMuse = true, museAvailable = false;
+let session = [];
 
 function polar(r, deg) { const a = (deg - 90) * Math.PI / 180; return [250 + r * Math.cos(a), 250 + r * Math.sin(a)]; }
 function arcPath(r, a0, a1) {
@@ -237,15 +265,35 @@ function drawPositions(r) {          // measured optic disc (ring) and macula (d
   if (r.macula) { const [x, y] = at(r.macula); add('circle', { cx: x, cy: y, r: 7, class: 'pos-macula' }); }
 }
 
+function cap(s) { return s[0].toUpperCase() + s.slice(1); }
+
+function drawVisit() {                 // the four views a screening visit needs, from the photos checked so far
+  const cell = {};
+  for (const { r } of session) {
+    if (r.verdict === 'not_fundus' || !r.eye || !r.field) continue;
+    const k = r.eye + '|' + r.field;
+    if (r.verdict === 'keep') cell[k] = 'kept'; else if (cell[k] !== 'kept') cell[k] = 'retake';
+  }
+  const word = { kept: 'Kept', retake: 'Retake needed', undefined: 'Not yet' };
+  let html = '<tr><th></th><th>Centred on macula</th><th>Centred on disc</th></tr>';
+  for (const eye of ['right', 'left']) {
+    html += `<tr><th>${cap(eye)} eye</th>` + ['macula', 'disc'].map(f => {
+      const st = cell[eye + '|' + f];
+      return `<td class="${st || 'none'}">${word[st]}</td>`;
+    }).join('') + '</tr>';
+  }
+  $('visit').innerHTML = html;
+  return Object.values(cell).filter(v => v === 'kept').length;
+}
+
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 function money(x) { return x === 0 ? '$0' : '$' + (x < 0.01 ? x.toFixed(4) : x.toFixed(2)); }
 
 function setStatus(b) {
-  museAvailable = b.muse;
   const el = $('wording-status');
-  if (!b.muse) el.innerHTML = 'Instructions: <b>standard (no Muse Spark key)</b>';
-  else if (!b.can_call) el.innerHTML = `Instructions: <b>standard (today's Muse Spark cap reached)</b>`;
-  else el.innerHTML = `Instructions: <b>Muse Spark</b>, ${money(b.spent_today)} of ${money(b.cap_today)} used today`;
+  if (!b.muse) el.innerHTML = "Coach's note: <b>standard (no Muse Spark key)</b>";
+  else if (!b.can_call) el.innerHTML = "Coach's note: <b>standard (today's Muse Spark cap reached)</b>";
+  else el.innerHTML = `Coach's note: <b>Muse Spark</b>, ${money(b.spent_today)} of ${money(b.cap_today)} used today`;
 }
 
 function render(r, note) {
@@ -253,16 +301,18 @@ function render(r, note) {
   $('photo').setAttribute('href', r.preview);
   $('drop-lead').textContent = 'Drop or choose another photo';
   const states = {};
-  for (const k of Object.keys(PROBLEMS)) states[k] = r.verdict === 'not_fundus' ? 'off' : (r.checks[k].found ? 'found' : r.checks[k].minor ? 'minor' : 'clear');
+  for (const k of Object.keys(PROBLEMS)) states[k] = r.verdict === 'not_fundus' ? 'off' : (r.checks[k].found ? 'found' : (r.checks[k].minor || r.checks[k].marked) ? 'minor' : 'clear');
   vf.classList.remove('drawn'); void vf.offsetWidth; vf.classList.add('drawn');
   drawArcs(states);
   drawPositions(r);
+  const layer = $('obstruction-layer');
+  if (r.obstruction && r.obstruction.overlay) layer.setAttribute('href', r.obstruction.overlay); else layer.removeAttribute('href');
 
   let rows = '';
   if (r.verdict !== 'not_fundus') {
     for (const k of Object.keys(PROBLEMS)) {
-      const c = r.checks[k], found = c.found, flagged = c.found || c.minor;
-      rows += `<dt>${NAMES[k]}</dt><dd><span class="${found ? 'found' : ''}">${WORDS[k][flagged ? 0 : 1]}${c.minor ? ' (still gradable)' : ''}</span>
+      const c = r.checks[k], found = c.found, flagged = c.found || c.minor || c.marked;
+      rows += `<dt>${NAMES[k]}</dt><dd><span class="${found ? 'found' : ''}">${WORDS[k][flagged ? 0 : 1]}${c.minor ? ' (still gradable)' : c.marked ? ' (from the marked area)' : ''}</span>
         <span class="small">score ${c.score.toFixed(2)}, flagged from ${c.threshold.toFixed(2)}</span>
         <div class="meter ${found ? 'found' : ''}" aria-hidden="true"><i style="width:${(100 * c.score).toFixed(0)}%"></i><b style="left:${(100 * c.threshold).toFixed(0)}%"></b></div></dd>`;
     }
@@ -270,36 +320,41 @@ function render(r, note) {
       ? `<dt>Overall</dt><dd>Quality score ${r.p_not_good.toFixed(2)} <span class="small">for reference; a retake is asked only for a problem above</span></dd>`
       : `<dt>Overall</dt><dd>${r.p_not_good >= r.retake_threshold ? 'Not good enough to grade' : 'Good enough to grade'}
       <span class="small">score ${r.p_not_good.toFixed(2)}, retake from ${r.retake_threshold.toFixed(2)}</span></dd>`;
+    if (r.obstruction) rows += `<dt>Where</dt><dd>${esc(r.obstruction.summary)}
+      <span class="small">${!r.obstruction.where ? 'no single area stood out enough to mark'
+        : r.obstruction.hint ? 'blue on the photo. The obstruction score stayed under its line, but clear photos rarely mark this much'
+        : 'blue on the photo, measured by the obstruction check itself'}</span></dd>`;
   }
   rows += `<dt>Fundus photo</dt><dd>${r.verdict === 'not_fundus' ? 'No, unlike the photos it knows' : 'Yes'}
     <span class="small">energy ${r.energy.toFixed(1)}, turned away above ${r.energy_limit.toFixed(1)}</span></dd>
-    <dt>Time</dt><dd>Checked in ${r.ms.detect} ms${r.ms.wording > 50 ? `, instruction in ${(r.ms.wording / 1000).toFixed(1)} s` : ''}</dd>`;
+    <dt>Time</dt><dd>Checked in ${r.ms.detect} ms${r.ms.map > 0 ? `, located in ${r.ms.map} ms` : ''}${r.ms.wording > 50 ? `, instruction in ${(r.ms.wording / 1000).toFixed(1)} s` : ''}</dd>`;
   if (r.positions && r.verdict !== 'not_fundus' && (r.checks.aim.found || r.checks.aim.minor)) rows += `<dt>Positions</dt><dd>${esc(r.positions[0].toUpperCase() + r.positions.slice(1))}
     <span class="small">measured on the photo: ring = optic disc, dot = macula</span></dd>`;
+  if (r.verdict !== 'not_fundus') rows += `<dt>Photo</dt><dd>${r.eye ? cap(r.eye) + ' eye' : 'Eye not measured'}${r.field ? `, centred on the ${r.field === 'disc' ? 'optic disc' : 'macula'}` : ''}
+    <span class="small">${r.eye ? 'from where the disc sits next to the macula' : 'both the disc and the macula are needed to tell'}</span></dd>`;
   if (note) rows += `<dt>Sample</dt><dd>${esc(note.name)} ${note.text ? `<span class="small">${esc(note.text)}</span>` : ''}</dd>`;
 
-  const src = r.source === 'muse-spark' ? `Written by Muse Spark for ${money(r.cost)}`
-            : r.source.startsWith('template (') ? `Standard instruction: ${esc(r.source.slice(10, -1))}`
-            : r.verdict === 'retake' ? 'Standard instruction' : '';
+  const src = r.verdict === 'retake' ? 'Built from what was measured on this photo' : '';
   result.className = 'result v-' + r.verdict;
   result.innerHTML = `
     <div class="verdict">${ICONS[r.verdict]}<span>${HEAD[r.verdict]}</span></div>
     <p class="instruction">${esc(r.instruction)}</p>
     <p class="source">${src}</p>
     <h3>What the check saw</h3>
-    <dl class="rows">${rows}</dl>
-    <label class="toggle"><input type="checkbox" id="muse" ${useMuse ? 'checked' : ''} ${museAvailable ? '' : 'disabled'}>
-      <span>Word retake instructions with Muse Spark. This sends a retake photo to the Meta Model API. When it's off, standard instructions are used.</span></label>`;
-  $('muse').addEventListener('change', e => { useMuse = e.target.checked; });
+    <dl class="rows">${rows}</dl>`;
   setStatus(r.budget);
 }
 
 function addToSession(r, note) {
   session.unshift({ r, note });
-  $('session').hidden = false;
+  $('session').hidden = false; $('note').hidden = true;
   const n = session.length, re = session.filter(s => s.r.verdict === 'retake').length;
   const away = session.filter(s => s.r.verdict === 'not_fundus').length;
-  $('session-count').textContent = `${n} checked, ${n - re - away} kept, ${re} to retake` + (away ? `, ${away} not ${away === 1 ? 'a fundus photo' : 'fundus photos'}` : '');
+  const done = drawVisit();
+  const unknown = session.filter(s => s.r.verdict !== 'not_fundus' && (!s.r.eye || !s.r.field)).length;
+  $('session-count').textContent = `${done} of 4 views kept. ${n} checked, ${n - re - away} kept, ${re} to retake`
+    + (away ? `, ${away} not ${away === 1 ? 'a fundus photo' : 'fundus photos'}` : '')
+    + (unknown ? `; ${unknown} where the eye or field couldn't be measured` : '') + '.';
   const box = $('session-thumbs'); box.innerHTML = '';
   session.forEach((s, i) => {
     const b = document.createElement('button');
@@ -317,7 +372,8 @@ async function check(blob, note) {
   if (!vf.classList.contains('has-photo')) {
     vf.classList.add('has-photo'); $('photo').setAttribute('href', URL.createObjectURL(blob));
   }
-  const fd = new FormData(); fd.append('photo', blob, blob.name || 'photo.jpg'); fd.append('use_muse', useMuse);   // the server decides whether Muse Spark is available
+  const fd = new FormData(); fd.append('photo', blob, blob.name || 'photo.jpg'); fd.append('keep_in', 'visit');   // kept on the server for this visit
+  if (note) { fd.append('sample_name', note.name); fd.append('sample_note', note.text || ''); }
   try {
     const res = await fetch('/api/check', { method: 'POST', body: fd });
     const body = await res.json().catch(() => ({}));
@@ -330,13 +386,48 @@ async function check(blob, note) {
   }
 }
 
+
+// The coach's note: only each result's verdict, problems, obstruction place and tone, eye and field are sent,
+// and the server passes only their counts in words to Muse Spark.
+const slim = r => ({ verdict: r.verdict, problems: r.problems || [], eye: r.eye || null, field: r.field || null,
+                     obstruction: r.obstruction ? { where: r.obstruction.where, tone: r.obstruction.tone } : null });
+async function coachNote(results, box, btn) {
+  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Writing…';
+  try {
+    const res = await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ results: results.map(slim) }) });
+    const b = await res.json();
+    if (!res.ok) throw new Error(b.detail || 'failed');
+    const src = b.source === 'muse-spark' ? `Written by Muse Spark for ${money(b.cost)}. No photos were sent.`
+              : `Standard summary${b.source.startsWith('template (') ? ` (${esc(b.source.slice(10, -1))})` : ''}.`;
+    box.innerHTML = `<p>${esc(b.note)}</p><p class="src">${src}</p>
+      <details><summary>What Muse Spark was given</summary><pre>${esc(b.facts)}</pre></details>`;
+    if (b.budget) setStatus(b.budget);
+  } catch (e) {
+    box.innerHTML = '<p>The note could not be written. Make sure app.py is running.</p>';
+  }
+  box.hidden = false; btn.textContent = label; btn.disabled = false;
+}
+
+$('note-btn').addEventListener('click', () => coachNote(session.map(x => x.r), $('note'), $('note-btn')));
+$('new-patient').addEventListener('click', () => {
+  session = []; $('session').hidden = true; $('session-thumbs').innerHTML = ''; $('note').hidden = true;
+  fetch('/api/clear?which=visit', { method: 'POST' }).catch(() => {});
+});
 $('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) check(f, ''); e.target.value = ''; });
 ['dragenter', 'dragover'].forEach(t => vf.addEventListener(t, e => { e.preventDefault(); vf.classList.add('dragging'); }));
 ['dragleave', 'drop'].forEach(t => vf.addEventListener(t, e => { e.preventDefault(); vf.classList.remove('dragging'); }));
 vf.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) check(f, ''); });
 
-fetch('/api/status').then(r => r.json()).then(s => setStatus(s.budget)).catch(() => {
-  $('wording-status').innerHTML = 'Instructions: <b>server not reachable</b>';
+// Coming back from the other page, or reloading: bring back this visit's photos and show the latest one.
+fetch('/api/state').then(r => r.json()).then(st => {
+  if (!st.visit.length || session.length) return;
+  for (const r of st.visit) addToSession(r, r.sample);
+  const last = st.visit[st.visit.length - 1]; render(last, last.sample);
+}).catch(() => {}).then(() => fetch('/api/status')).then(r => r.json()).then(s => {
+  setStatus(s.budget);
+  if (s.obstruction_map && s.obstruction_map !== s.detector) $('detector-status').innerHTML = 'Detector: <b>DINOv2 + DINOv3 on this computer</b>';
+}).catch(() => {
+  $('wording-status').innerHTML = "Coach's note: <b>server not reachable</b>";
 });
 fetch('/api/examples').then(r => r.json()).then(list => {
   if (!list.length) return;

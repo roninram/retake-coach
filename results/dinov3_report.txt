@@ -1,0 +1,30 @@
+== Quality heads and guard: DINOv2 vs DINOv3 ==
+                                                                                DINOv2 (base)                                    DINOv3 (ViT-B/16)
+retake: AUROC val                                                                       0.808                                                0.835
+retake: AUROC test                                                          0.826 (0.78-0.87)                                    0.810 (0.76-0.85)
+focus: AUROC val                                                                        0.898                                                0.898
+focus: AUROC test                                                           0.898 (0.86-0.93)                                    0.916 (0.88-0.94)
+aim: AUROC val                                                                            0.9                                                0.896
+aim: AUROC test                                                             0.855 (0.81-0.90)                                    0.842 (0.79-0.89)
+obstruction: AUROC val                                                                  0.954                                                0.953
+obstruction: AUROC test                                                     0.945 (0.92-0.96)                                    0.939 (0.92-0.96)
+bad photos caught (test)                                                                  75%                                                  80%
+good photos sent back (test)                                                              25%                                                  34%
+first named problem real (test)                                                           84%                                                  88%
+IDRiD photos sent back                                                                    10%                                                   4%
+guard: fundus accepted                                                                   100%                                                  99%
+guard: widefield + everyday turned away                                                  100%                                                 100%
+regularization picked                    retake 0.002, focus 0.02, aim 0.02, obstruction 0.01  retake 0.05, focus 0.05, aim 0.05, obstruction 0.05
+
+Mean validation AUROC: DINOv2 0.890, DINOv3 0.896. Decision (rule set before running): keep DINOv2
+
+== Locator: IDRiD held-out photos (expert marks), and which eye on DeepDRiD test ==
+                                                DINOv2 (base) DINOv3 (ViT-B/16)
+disc error, median (disc diameters)                     0.081              0.08
+disc within 1 DD                                         100%              100%
+fovea error, median (disc diameters)                    0.085             0.092
+fovea within 1 DD                                        100%               98%
+DeepDRiD test: both found                                 90%               89%
+DeepDRiD test: eye (R/L) right, when both found         94.4%             96.3%
+
+Saved quality/coach_model_v3.npz and quality/locator_v3.npz (the app picks the encoder named inside the model file).
