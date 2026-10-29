@@ -46,13 +46,13 @@ photos look like (`notebooks/8_eyer_check.ipynb`, written for the Phelcom Eyer2 
 | Measure where the optic disc and macula are, so aim directions are never guessed, and tell which eye | **DINOv2** patch tokens plus a ridge map to two heatmaps | on the local computer | $0 |
 | Say where a shadow or glare is | **DINOv3** (`facebook/dinov3-vitb16-pretrain-lvd1689m`, frozen) patch tokens, read through the obstruction head's own weights | on the local computer | $0 |
 | Accept photos from a newly added camera | **DINOv2** features plus a second Gaussian energy fitted on that camera's own photos (no labels) | on the local computer | $0 |
-| Write the coach's note at the end of a visit or batch, from the session's counts in words | **Muse Spark 1.3** through the Meta Model API, with `reasoning_effort="minimal"` | cloud, under a daily dollar and request cap | about $0.003 per note (estimate) |
+| Write the coach's note at the end of a visit or batch, from the session's counts in words | **Muse Spark 1.3** through the Meta Model API, with `reasoning_effort="minimal"` | cloud, under a daily dollar and request cap | under a cent per note ($0.002–0.007 in our runs) |
 
 Everything that looks at the photo runs on the camera's computer, and the photo stays there. Muse Spark gets only the
 session's counts in words, such as "Problems on the photos sent back: obstruction 3 (dark shadow toward the top of the
-photo 2; glare or haze in the centre of the photo 1), focus 1". The page shows exactly what it was given. If the note
-contains a number that is not in those counts, a fixed summary of the same counts is shown instead; the same happens
-past the cap or on any error.
+photo 2; glare or haze in the centre of the photo 1), focus 1". The page shows exactly what it was given. It also gets the standard
+advice for each problem found, and must use only that advice. If the note contains a number that is not in those
+counts, a fixed summary of the same counts is shown instead; the same happens past the cap or on any error.
 
 Muse Spark neither detects problems nor writes each instruction, by design. We tested both:
 - **As the judge:** in a 20-photo pilot it asked for a retake on 4 of 5 good photos and named almost every problem on

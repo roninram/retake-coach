@@ -684,7 +684,7 @@ VIEW_NAMES = {("right", "macula"): "right eye centred on the macula", ("right", 
 KIND = {"darker": "dark shadow", "brighter": "glare or haze", None: "something in the way"}
 HABITS = {
     "focus": "Refocus on the small vessels before every shot.",
-    "aim": "Before pressing the shutter, check that the optic disc and the macula are both near the centre.",
+    "aim": "Before pressing the shutter, check that the macula (or, for the disc view, the optic disc) is in the middle and the other is in the picture.",
     "darker": "Ask each patient to open wide before the shot, and centre the camera on the pupil.",
     "brighter": "Wipe the lens between patients and hold the working distance steady.",
     None: "Ask each patient to open wide, and wipe the lens between patients.",
@@ -692,9 +692,10 @@ HABITS = {
 NOTE_PROMPT = """You coach a technician who takes retinal (fundus) photos for eye screening. An automatic photo-quality
 check found this in today's session:
 {facts}
-Write a short note to the technician: at most 3 sentences and 60 words. Say what went wrong most often and one concrete
-habit that would prevent it. If a view has no kept photo, name it. Use only the facts above and add no numbers of your
-own. It is not for the patient. Do not mention disease or diagnosis.
+Write a short note to the technician: at most 3 sentences and 60 words. Name the most common problem (if two are tied,
+name both) and give its advice from the list above as the habit to keep. If a view has no kept photo, name it. Do not say
+that fixing one problem also fixes another. Use only the facts and advice above, and add no numbers of your own. It is
+not for the patient. Do not mention disease or diagnosis.
 Reply with JSON only: {{"note": "..."}}"""
 
 
@@ -729,6 +730,11 @@ def session_facts(results):
                     part += " (" + "; ".join(f"{KIND[t]} {obstruction_place(dict(where=w))} {k}" for (t, w), k in places.most_common()) + ")"
             parts.append(part)
         lines.append("Problems on the photos sent back (a photo can have more than one): " + ", ".join(parts) + ".")
+    if count:                                   # the standard advice for each problem found; the note may use only this
+        advice = [f"for {'obstruction' + {'darker': ' (mostly dark shadows)', 'brighter': ' (mostly glare or haze)', None: ''}[tones.most_common(1)[0][0] if tones else None]}: "
+                  f"{HABITS[tones.most_common(1)[0][0] if tones else None]}" if p == "obstruction" else f"for {p}: {HABITS[p]}"
+                  for p, _ in count.most_common()]
+        lines.append("Advice " + " / ".join(advice))
     kept_views = Counter((r["eye"], r["field"]) for r in kept if r["eye"] and r["field"])
     missing = []
     if any(r["eye"] and r["field"] for r in rs):
@@ -746,7 +752,7 @@ def note_template(f):
     if not f["back"]:
         s = f"None of the {f['n']} photos needed a retake."
     else:
-        mostly = {"darker": ", mostly dark shadows", "brighter": ", mostly glare or haze", None: ""}[f["top_tone"]]
+        mostly = {"darker": ", mostly dark shadows", "brighter": ", mostly glare or haze", None: ""}[f["top_tone"]] if f["top"] == "obstruction" else ""
         what = {"focus": "blur", "aim": "aim off centre", "obstruction": "something in the way"}[f["top"]]
         habit = HABITS[f["top_tone"]] if f["top"] == "obstruction" else HABITS[f["top"]]
         s = f"{f['back']} of {f['n']} photos needed a retake, most often for {what} ({f['top_count']}){mostly}. {habit}"
