@@ -37,6 +37,8 @@ photos look like (`notebooks/8_eyer_check.ipynb`, written for the Phelcom Eyer2 
 
 ![Retake Coach asking for a retake of DeepDRiD photo 347_r1: it is blurry, and a dark shadow covers about a quarter of the photo at the upper left. The blue area is where the obstruction check found it, measured on the computer with DINOv3. The ring and dot are the measured optic disc and macula.](docs/screenshot.png)
 
+![Another screenshot with Coach's Note](docs/Screenshot2.png)
+
 ## How it uses Meta models
 
 | Job | Meta model | Runs | Cost |
