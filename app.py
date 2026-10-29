@@ -25,6 +25,7 @@ import io
 import os
 import threading
 import time
+from collections import OrderedDict
 from pathlib import Path
 
 import numpy as np
@@ -202,23 +203,40 @@ class Watcher:
 
 class Store:
     """What the two pages have checked so far, kept here so that switching pages or reloading loses nothing:
-    the current visit on the one-photo page, and the list on the many-photos page. In memory only; a restart clears it."""
+    the current visit on the one-photo page, and the list on the many-photos page. Kept per browser tab (the pages send
+    a random session id), so people sharing a public demo never see each other's photos. In memory only; a restart
+    clears it, and the least recently used sessions are dropped past `sessions`."""
 
-    def __init__(self, limit=2000):
-        self.lists, self.lock, self.limit = {"visit": [], "batch": []}, threading.Lock(), limit
+    def __init__(self, limit=1000, sessions=200):
+        self.data, self.lock, self.limit, self.sessions = OrderedDict(), threading.Lock(), limit, sessions
 
-    def add(self, which, r):
+    def _lists(self, sid):
+        if sid not in self.data:
+            self.data[sid] = {"visit": [], "batch": []}
+            while len(self.data) > self.sessions:
+                self.data.popitem(last=False)
+        self.data.move_to_end(sid)
+        return self.data[sid]
+
+    def add(self, sid, which, r):
         with self.lock:
-            self.lists[which].append(r)
-            del self.lists[which][:-self.limit]
+            lst = self._lists(sid)[which]
+            lst.append(r)
+            del lst[:-self.limit]
 
-    def clear(self, which):
+    def clear(self, sid, which):
         with self.lock:
-            self.lists[which] = []
+            self._lists(sid)[which] = []
 
-    def get(self):
+    def get(self, sid):
         with self.lock:
-            return {k: list(v) for k, v in self.lists.items()}
+            return {k: list(v) for k, v in self._lists(sid).items()}
+
+
+def session_id(sid):
+    """A page's session id, or 'local' when it sends none."""
+    sid = (sid or "local").strip()
+    return sid[:64] if sid.replace("-", "").isalnum() else "local"
 
 
 def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=None, store=None):
@@ -239,6 +257,7 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
     def status():
         return dict(budget=budget.status(), thresholds=dict(zip(cc.Coach.HEADS, map(float, coach.thr))),
                     energy_limit=coach.g_thr, watching=str(watcher.folder) if watcher else None,
+                    demo=bool(os.environ.get("RC_DEMO")),
                     detector=coach.backbone, obstruction_map=checker.omap.backbone if checker.omap else None)
 
     @app.get("/api/examples")
@@ -261,7 +280,7 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
 
     @app.post("/api/check")
     def check(photo: UploadFile = File(...), keep_in: str = Form(""), name: str = Form(""),
-              sample_name: str = Form(""), sample_note: str = Form("")):
+              sample_name: str = Form(""), sample_note: str = Form(""), sid: str = Form("")):
         """keep_in: 'visit' or 'batch' keeps the result for that page (see /api/state)."""
         data = photo.file.read(MAX_BYTES + 1)
         if len(data) > MAX_BYTES:
@@ -273,20 +292,20 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
         r.update(name=name or photo.filename or "photo", arrived=datetime.datetime.now().strftime("%H:%M:%S"),
                  sample=dict(name=sample_name, text=sample_note) if sample_name else None)
         if keep_in in ("visit", "batch"):
-            store.add(keep_in, r)
+            store.add(session_id(sid), keep_in, r)
         return JSONResponse(r)
 
     @app.get("/api/state")
-    def state():
-        """Everything checked so far on each page, oldest first."""
-        return store.get()
+    def state(sid: str = ""):
+        """Everything this browser tab has checked so far on each page, oldest first."""
+        return store.get(session_id(sid))
 
     @app.post("/api/clear")
-    def clear(which: str):
+    def clear(which: str, sid: str = ""):
         """'visit' (New patient) or 'batch' (Clear list; also forgets photos shown from the watched folder)."""
         if which not in ("visit", "batch"):
             raise HTTPException(400, "Clear 'visit' or 'batch'.")
-        store.clear(which)
+        store.clear(session_id(sid), which)
         if which == "batch" and watcher:
             watcher.clear()
         return dict(cleared=which)

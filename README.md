@@ -37,8 +37,6 @@ photos look like (`notebooks/8_eyer_check.ipynb`, written for the Phelcom Eyer2 
 
 ![Retake Coach asking for a retake of DeepDRiD photo 347_r1: it is blurry, and a dark shadow covers about a quarter of the photo at the upper left. The blue area is where the obstruction check found it, measured on the computer with DINOv3. The ring and dot are the measured optic disc and macula.](docs/screenshot.png)
 
-![Another screenshot with Coach's Note](docs/Screenshot2.png)
-
 ## How it uses Meta models
 
 | Job | Meta model | Runs | Cost |
@@ -233,6 +231,13 @@ Further checks, each optional:
   camera ($0). An optional last cell, off by default, asks SAM 3.1 to outline the lid and lashes on photos named
   `lid` (at most 6 requests, $0.015).
 - `notebooks/9_obstruction_map_test.ipynb`: the obstruction map test above, for both DINOv2 and DINOv3 ($0).
+
+**As a public demo on a Hugging Face Space** (free CPU hardware is enough): create a Docker Space and upload the two
+files in [`space/`](space/), `Dockerfile` and `README.md`. The build clones this repository, fetches the sample photos
+from DeepDRiD, and downloads DINOv2 and DINOv3. Add the secret `HF_TOKEN` from an account that has accepted the DINOv3
+licence (without it the obstruction map stays off), and optionally `MODEL_API_KEY` for the coach's note, which the
+Space caps at $0.10 a day and $0.50 in total. The pages then show a banner asking people not to upload patient photos,
+and each browser tab sees only its own photos.
 
 **Locally:**
 

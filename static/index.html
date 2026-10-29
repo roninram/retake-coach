@@ -135,6 +135,8 @@ main {
 .visit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .ghost { background: none; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer; }
 .ghost:hover { border-color: var(--ink-2); }
+.demo { border-left: 4px solid var(--retake); background: var(--panel); border-radius: 0 10px 10px 0; padding: 10px 16px; margin: 0 0 20px; font-size: 15px; color: var(--ink); max-width: 90ch; }
+
 .visit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .note { margin: 16px 0 6px; background: var(--panel); border-left: 4px solid var(--keep); border-radius: 0 10px 10px 0; padding: 12px 16px; max-width: 72ch; }
 .note p { margin: 0; }
@@ -168,6 +170,7 @@ footer p { margin: 4px 0; }
     <span id="wording-status">Coach's note: <b>checking…</b></span>
   </div>
 </header>
+  <p class="demo" style="margin: 20px auto 0; width: calc(100% - 2 * clamp(16px, 4vw, 40px)); max-width: 1180px" id="demo" hidden>Public demo on a shared server. Try the sample photos, or your own test images, but please don't upload patient photos. In a clinic, Retake Coach runs on the computer next to the camera, and photos stay there.</p>
 
 <main>
   <section class="photo" aria-label="Photo">
@@ -228,6 +231,11 @@ const ICONS = {
 const HEAD = { keep: 'Keep', retake: 'Retake', not_fundus: 'Not a fundus photo' };
 const $ = id => document.getElementById(id);
 const vf = $('vf'), result = $('result');
+// A random id for this browser tab, so the server keeps this tab's photos apart from anyone else's.
+const SID = (() => {
+  try { let s = sessionStorage.getItem('rc-sid'); if (!s) { s = crypto.randomUUID(); sessionStorage.setItem('rc-sid', s); } return s; }
+  catch (e) { return 'tab-' + Math.random().toString(36).slice(2); }
+})();
 let session = [];
 
 function polar(r, deg) { const a = (deg - 90) * Math.PI / 180; return [250 + r * Math.cos(a), 250 + r * Math.sin(a)]; }
@@ -372,7 +380,7 @@ async function check(blob, note) {
   if (!vf.classList.contains('has-photo')) {
     vf.classList.add('has-photo'); $('photo').setAttribute('href', URL.createObjectURL(blob));
   }
-  const fd = new FormData(); fd.append('photo', blob, blob.name || 'photo.jpg'); fd.append('keep_in', 'visit');   // kept on the server for this visit
+  const fd = new FormData(); fd.append('photo', blob, blob.name || 'photo.jpg'); fd.append('keep_in', 'visit'); fd.append('sid', SID);   // kept on the server for this visit
   if (note) { fd.append('sample_name', note.name); fd.append('sample_note', note.text || ''); }
   try {
     const res = await fetch('/api/check', { method: 'POST', body: fd });
@@ -411,7 +419,7 @@ async function coachNote(results, box, btn) {
 $('note-btn').addEventListener('click', () => coachNote(session.map(x => x.r), $('note'), $('note-btn')));
 $('new-patient').addEventListener('click', () => {
   session = []; $('session').hidden = true; $('session-thumbs').innerHTML = ''; $('note').hidden = true;
-  fetch('/api/clear?which=visit', { method: 'POST' }).catch(() => {});
+  fetch('/api/clear?which=visit&sid=' + encodeURIComponent(SID), { method: 'POST' }).catch(() => {});
 });
 $('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) check(f, ''); e.target.value = ''; });
 ['dragenter', 'dragover'].forEach(t => vf.addEventListener(t, e => { e.preventDefault(); vf.classList.add('dragging'); }));
@@ -419,12 +427,12 @@ $('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) 
 vf.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) check(f, ''); });
 
 // Coming back from the other page, or reloading: bring back this visit's photos and show the latest one.
-fetch('/api/state').then(r => r.json()).then(st => {
+fetch('/api/state?sid=' + encodeURIComponent(SID)).then(r => r.json()).then(st => {
   if (!st.visit.length || session.length) return;
   for (const r of st.visit) addToSession(r, r.sample);
   const last = st.visit[st.visit.length - 1]; render(last, last.sample);
 }).catch(() => {}).then(() => fetch('/api/status')).then(r => r.json()).then(s => {
-  setStatus(s.budget);
+  setStatus(s.budget); $('demo').hidden = !s.demo;
   if (s.obstruction_map && s.obstruction_map !== s.detector) $('detector-status').innerHTML = 'Detector: <b>DINOv2 + DINOv3 on this computer</b>';
 }).catch(() => {
   $('wording-status').innerHTML = "Coach's note: <b>server not reachable</b>";

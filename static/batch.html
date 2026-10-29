@@ -70,6 +70,7 @@ table.results { width: 100%; border-collapse: collapse; font-size: 15px; }
 .note details { margin-top: 6px; font-size: 14px; color: var(--ink-2); }
 .note summary { cursor: pointer; }
 .note pre { white-space: pre-wrap; font: inherit; margin: 6px 0 0; }
+.demo { border-left: 4px solid var(--retake); background: var(--panel); border-radius: 0 10px 10px 0; padding: 10px 16px; margin: 0 0 20px; font-size: 15px; color: var(--ink); max-width: 90ch; }
 footer { max-width: 1160px; margin: 0 auto; padding: 8px clamp(16px, 4vw, 40px) 32px; color: var(--ink-2); font-size: 14px; }
 </style>
 </head>
@@ -89,6 +90,7 @@ footer { max-width: 1160px; margin: 0 auto; padding: 8px clamp(16px, 4vw, 40px) 
 </header>
 
 <main>
+  <p class="demo" id="demo" hidden>Public demo on a shared server. Try the sample photos, or your own test images, but please don't upload patient photos. In a clinic, Retake Coach runs on the computer next to the camera, and photos stay there.</p>
   <h1>Check a batch of photos</h1>
   <p class="lead">Drop the photos from a clinic session, or a whole folder. Each one gets keep or retake and a line on what to fix, so the ones to redo are clear before the photos go to a grader.</p>
 
@@ -121,6 +123,11 @@ footer { max-width: 1160px; margin: 0 auto; padding: 8px clamp(16px, 4vw, 40px) 
 const $ = id => document.getElementById(id);
 const IMAGE = /\.(jpe?g|png|tiff?|bmp|webp)$/i;
 const HEAD = { keep: 'Keep', retake: 'Retake', not_fundus: 'Not a fundus photo', unreadable: 'Unreadable' };
+// A random id for this browser tab, so the server keeps this tab's photos apart from anyone else's.
+const SID = (() => {
+  try { let s = sessionStorage.getItem('rc-sid'); if (!s) { s = crypto.randomUUID(); sessionStorage.setItem('rc-sid', s); } return s; }
+  catch (e) { return 'tab-' + Math.random().toString(36).slice(2); }
+})();
 let rows = [], queue = [], busy = false, watchedSince = 0;
 
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
@@ -156,7 +163,7 @@ async function pump() {                      // one photo at a time, in the orde
   while (queue.length) {
     const f = queue.shift(); done++;
     $('progress').textContent = `Checking ${f.name} (${queue.length} left)`;
-    const fd = new FormData(); fd.append('photo', f, f.name); fd.append('keep_in', 'batch'); fd.append('name', f.webkitRelativePath || f.name);
+    const fd = new FormData(); fd.append('photo', f, f.name); fd.append('keep_in', 'batch'); fd.append('sid', SID); fd.append('name', f.webkitRelativePath || f.name);
     try {
       const res = await fetch('/api/check', { method: 'POST', body: fd });
       const body = await res.json().catch(() => ({}));
@@ -247,13 +254,13 @@ async function poll() {                      // photos arriving in a watched fol
 
 $('clear').addEventListener('click', () => {
   rows = []; draw(); $('progress').textContent = '';
-  fetch('/api/clear?which=batch', { method: 'POST' }).catch(() => {});
+  fetch('/api/clear?which=batch&sid=' + encodeURIComponent(SID), { method: 'POST' }).catch(() => {});
 });
 
 // Coming back from the other page, or reloading: bring back the list checked so far.
-fetch('/api/state').then(r => r.json()).then(st => { if (st.batch.length) { rows = st.batch.slice().reverse().concat(rows); draw(); } })
+fetch('/api/state?sid=' + encodeURIComponent(SID)).then(r => r.json()).then(st => { if (st.batch.length) { rows = st.batch.slice().reverse().concat(rows); draw(); } })
 .catch(() => {}).then(() => fetch('/api/status')).then(r => r.json()).then(s => {
-  setStatus(s.budget); if (s.watching) poll();
+  setStatus(s.budget); if (s.watching) poll(); $('demo').hidden = !s.demo;
   if (s.obstruction_map && s.obstruction_map !== s.detector) $('detector-status').innerHTML = 'Detector: <b>DINOv2 + DINOv3 on this computer</b>';
 }).catch(() => {
   $('wording-status').innerHTML = "Coach's note: <b>server not reachable</b>";

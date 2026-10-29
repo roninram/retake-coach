@@ -1,0 +1,9 @@
+numpy
+scipy
+pillow
+transformers>=4.56
+fastapi
+uvicorn
+python-multipart
+openai
+scikit-image
