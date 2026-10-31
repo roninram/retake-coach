@@ -322,12 +322,13 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
             results = [dict(r, eye=None, field=None) for r in results]
         facts = cc.session_facts(results)
         fallback = cc.note_template(facts)
-        if payload.get("use_muse", True) and facts["n"]:
+        if payload.get("use_muse", True) and facts["kept"] + facts["back"]:     # nothing to coach on: no Muse call
             with checker.wlock:
                 out = budget.today().note(facts["text"], fallback)
         else:
             out = dict(text=fallback, source="template", cost=0.0)
-        return dict(note=out["text"], source=out["source"], cost=round(out["cost"], 5), facts=facts["text"], budget=budget.status())
+        return dict(note=out["text"], source=out["source"], cost=round(out["cost"], 5), facts=facts["text"],
+                    covers=cc.note_scope(facts), budget=budget.status())
 
     @app.get("/api/watch")
     def watch(since: int = 0):

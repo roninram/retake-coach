@@ -715,9 +715,11 @@ def session_facts(results):
     rs = [_clean_result(r) for r in results]
     kept = [r for r in rs if r["verdict"] == "keep"]
     back = [r for r in rs if r["verdict"] == "retake"]
-    away = len(rs) - len(kept) - len(back)
+    other = sum(r["verdict"] == "not_fundus" for r in rs)    # turned away by the guard: no quality facts come from these
+    unread = len(rs) - len(kept) - len(back) - other
     lines = [f"Photos checked: {len(rs)}. Kept: {len(kept)}. Sent back for a retake: {len(back)}."
-             + (f" Not regular fundus photos, or unreadable: {away}." if away else "")]
+             + (f" Not regular fundus photos, left out of everything below: {other}." if other else "")
+             + (f" Unreadable, left out of everything below: {unread}." if unread else "")]
     count = Counter(p for r in back for p in r["problems"])
     tones = Counter(r["tone"] for r in back if "obstruction" in r["problems"])
     if count:
@@ -741,21 +743,37 @@ def session_facts(results):
         lines.append("Kept photos by view: " + ", ".join(f"{name} {kept_views[v]}" for v, name in VIEW_NAMES.items()) + ".")
         missing = [name for v, name in VIEW_NAMES.items() if not kept_views[v]]
     top = count.most_common(1)[0][0] if count else None
-    return dict(text="\n".join("- " + l for l in lines), n=len(rs), kept=len(kept), back=len(back), top=top,
-                top_count=count[top] if top else 0, top_tone=tones.most_common(1)[0][0] if tones else None, missing=missing)
+    return dict(text="\n".join("- " + l for l in lines), n=len(rs), kept=len(kept), back=len(back), other=other,
+                unread=unread, top=top, top_count=count[top] if top else 0,
+                top_tone=tones.most_common(1)[0][0] if tones else None, missing=missing)
+
+
+def note_scope(f):
+    """One line under the note saying which photos it covers, so a photo that was turned away is visibly left out."""
+    parts = [f"{f['kept']} kept", f"{f['back']} sent back"]
+    if f["other"]:
+        parts.append(f"{f['other']} not {'a regular fundus photo' if f['other'] == 1 else 'regular fundus photos'}")
+    if f["unread"]:
+        parts.append(f"{f['unread']} unreadable")
+    return (f"From {f['n']} photo{'' if f['n'] == 1 else 's'}: " + ", ".join(parts)
+            + (" (left out of the note)" if f["other"] or f["unread"] else "") + ".")
 
 
 def note_template(f):
     """The coach's note without Muse Spark: the same facts, in fixed sentences."""
     if not f["n"]:
         return "No photos checked yet."
+    fundus = f["kept"] + f["back"]
+    if not fundus:
+        return "None of the photos checked looked like a regular fundus photo, so there is nothing to coach on yet."
     if not f["back"]:
-        s = f"None of the {f['n']} photos needed a retake."
+        s = f"None of the {fundus} fundus photos needed a retake." if fundus > 1 else "The fundus photo did not need a retake."
     else:
         mostly = {"darker": ", mostly dark shadows", "brighter": ", mostly glare or haze", None: ""}[f["top_tone"]] if f["top"] == "obstruction" else ""
         what = {"focus": "blur", "aim": "aim off centre", "obstruction": "something in the way"}[f["top"]]
         habit = HABITS[f["top_tone"]] if f["top"] == "obstruction" else HABITS[f["top"]]
-        s = f"{f['back']} of {f['n']} photos needed a retake, most often for {what} ({f['top_count']}){mostly}. {habit}"
+        why = f"for {what}" if f["back"] == 1 else f"most often for {what} ({f['top_count']})"
+        s = f"{f['back']} of {fundus} fundus photo{'' if fundus == 1 else 's'} needed a retake, {why}{mostly}. {habit}"
     if f["missing"]:
         s += " No kept photo yet for: " + "; ".join(f["missing"]) + "."
     return s

@@ -407,7 +407,7 @@ async function coachNote(results, box, btn) {
     if (!res.ok) throw new Error(b.detail || 'failed');
     const src = b.source === 'muse-spark' ? `Written by Muse Spark for ${money(b.cost)}. No photos were sent.`
               : `Standard summary${b.source.startsWith('template (') ? ` (${esc(b.source.slice(10, -1))})` : ''}.`;
-    box.innerHTML = `<p>${esc(b.note)}</p><p class="src">${src}</p>
+    box.innerHTML = `<p>${esc(b.note)}</p><p class="src">${esc(b.covers || '')} ${src}</p>
       <details><summary>What Muse Spark was given</summary><pre>${esc(b.facts)}</pre></details>`;
     if (b.budget) setStatus(b.budget);
   } catch (e) {
