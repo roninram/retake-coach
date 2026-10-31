@@ -138,6 +138,8 @@ main {
 .ghost:disabled { opacity: .45; cursor: default; }
 .cleared { color: var(--keep); font-weight: 600; }
 .cleared a, footer a { color: inherit; }
+.help { font-size: 13px; font-weight: 400; color: var(--ink-2); margin-left: 10px; }
+.help:hover { color: var(--ink); }
 .demo { border-left: 4px solid var(--retake); background: var(--panel); border-radius: 0 10px 10px 0; padding: 10px 16px; margin: 0 0 20px; font-size: 15px; color: var(--ink); max-width: 90ch; }
 
 .visit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -167,7 +169,7 @@ footer p { margin: 4px 0; }
         <circle cx="13" cy="13" r="4" fill="#f4b740"/></svg>
       Retake Coach
     </div>
-    <nav aria-label="Pages"><a href="/" aria-current="page">One photo</a><a href="/batch">Many photos</a></nav>
+    <nav aria-label="Pages"><a href="/" aria-current="page">One photo</a><a href="/batch">Many photos</a><a href="/guide">Guide</a></nav>
   </div>
   <div class="status" aria-live="polite">
     <span id="detector-status">Detector: <b>DINOv2 on this computer</b></span>
@@ -208,7 +210,7 @@ footer p { margin: 4px 0; }
   </section>
 
   <section class="session" id="session" hidden>
-    <div class="visit-head"><h2>This visit</h2><div class="visit-actions"><button class="ghost" id="note-btn" type="button" title="One summary of every photo checked in this visit, written when you press it">Coach's note</button><button class="ghost" id="new-patient" type="button">New patient</button></div></div>
+    <div class="visit-head"><h2>This visit <a class="help" href="/guide#visit">How the visit works</a></h2><div class="visit-actions"><button class="ghost" id="note-btn" type="button" title="One summary of every photo checked in this visit, written when you press it">Coach's note</button><button class="ghost" id="new-patient" type="button">New patient</button></div></div>
     <table class="visit" id="visit" aria-label="Photos this visit needs"></table>
     <p class="count" id="session-count"></p>
     <div class="note" id="note" aria-live="polite" hidden></div>
@@ -355,7 +357,7 @@ function render(r, note) {
     <div class="verdict">${ICONS[r.verdict]}<span>${HEAD[r.verdict]}</span></div>
     <p class="instruction">${esc(r.instruction)}</p>
     <p class="source">${src}</p>
-    <h3>What the check saw</h3>
+    <h3>What the check saw <a class="help" href="/guide#numbers">What these mean</a></h3>
     <dl class="rows">${rows}</dl>`;
   setStatus(r.budget);
 }

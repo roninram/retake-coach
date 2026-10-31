@@ -28,6 +28,8 @@ What's on the two pages:
 - **Many photos** (`/batch`): drop a session's photos or a whole folder and get a table with keep or retake, what to
   fix, the eye and the field, plus a CSV download. It can also watch a folder, such as the one a camera exports to over
   Wi-Fi, and check each photo as it arrives. The coach's note sums up the batch.
+- **Guide** (`/guide`): what each word, number and mark on the pages means, from "flagged from" and the energy to the
+  blue area, the two views and the visit report's columns.
 
 Switching between the pages, or reloading one, keeps what has been checked. The server holds it in memory until it
 restarts; "New patient" and "Clear list" start over.

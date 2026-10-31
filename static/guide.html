@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retake Coach: guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --room: #171c22; --panel: #202830; --line: #34414d; --ink: #e6ebf0; --ink-2: #9eacba;
+  --keep: #63c29e; --retake: #f4b740; --away: #aab5c2; --focus: #8fc1ff; --mark: #3d8bff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--room); color: var(--ink); }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { font-family: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif; font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 18px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--line); }
+.left { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.mark { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 21px; letter-spacing: -0.01em; }
+.mark svg { width: 26px; height: 26px; }
+nav { display: flex; gap: 6px; font-size: 15px; }
+nav a { color: var(--ink-2); text-decoration: none; padding: 4px 2px; margin: 0 8px 0 0; border-bottom: 2px solid transparent; }
+nav a:hover { color: var(--ink); }
+nav a[aria-current] { color: var(--ink); border-bottom-color: var(--keep); }
+
+main { max-width: 980px; margin: 0 auto; padding: clamp(20px, 4vw, 44px) clamp(16px, 4vw, 40px) 60px; }
+h1 { font-size: 33px; line-height: 1.2; margin: 0 0 10px; font-weight: 800; letter-spacing: -0.015em; }
+.lead { color: var(--ink-2); max-width: 66ch; margin: 0 0 22px; }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 34px; padding: 0; list-style: none; }
+.toc a { display: inline-block; color: var(--ink); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; font-size: 15px; }
+.toc a:hover { border-color: var(--ink-2); }
+section { border-top: 1px solid var(--line); padding: 26px 0 8px; }
+h2 { font-size: 23px; margin: 0 0 6px; font-weight: 800; letter-spacing: -0.01em; }
+.intro { color: var(--ink-2); margin: 0 0 18px; max-width: 70ch; }
+dl.terms { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 14px 26px; margin: 0 0 18px; }
+dl.terms dt { font-weight: 600; }
+dl.terms dd { margin: 0; color: var(--ink); max-width: 68ch; }
+dl.terms dd .eg { display: block; color: var(--ink-2); font-size: 15px; margin-top: 2px; }
+.k { color: var(--keep); } .r { color: var(--retake); } .a { color: var(--away); }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14.5px; background: var(--panel); border-radius: 5px; padding: 1px 6px; }
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 4px 0 22px; }
+.legend figure { margin: 0; background: var(--panel); border-radius: 12px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
+.legend svg { width: 54px; height: 54px; flex: none; }
+.legend figcaption { font-size: 15px; line-height: 1.4; }
+.legend figcaption b { display: block; font-weight: 600; }
+.table-wrap { overflow-x: auto; margin: 4px 0 20px; }
+table { border-collapse: collapse; font-size: 15px; min-width: 520px; }
+th, td { text-align: left; vertical-align: top; padding: 7px 18px 7px 0; border-bottom: 1px solid var(--line); }
+th { color: var(--ink-2); font-weight: 600; }
+td:first-child { white-space: nowrap; }
+.note { background: var(--panel); border-left: 4px solid var(--keep); border-radius: 0 10px 10px 0; padding: 10px 16px; margin: 4px 0 20px; max-width: 72ch; font-size: 16px; }
+footer { color: var(--ink-2); font-size: 14px; max-width: 980px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px) 40px; }
+footer a, .intro a, dd a, .note a { color: inherit; }
+@media (max-width: 640px) {
+  dl.terms { grid-template-columns: 1fr; gap: 4px 0; }
+  dl.terms dd { margin-bottom: 12px; }
+  h1 { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="left">
+    <div class="mark">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="none" stroke="#63c29e" stroke-width="2.4"/>
+        <circle cx="13" cy="13" r="4" fill="#f4b740"/></svg>
+      Retake Coach
+    </div>
+    <nav aria-label="Pages"><a href="/">One photo</a><a href="/batch">Many photos</a><a href="/guide" aria-current="page">Guide</a></nav>
+  </div>
+</header>
+
+<main>
+  <h1>Guide</h1>
+  <p class="lead">What each word, number and mark on the pages means. Retake Coach checks photo quality only: whether a
+    fundus photo is good enough to grade, and if not, what to fix. It does not look for disease.</p>
+  <ul class="toc" aria-label="On this page">
+    <li><a href="#result">The result</a></li>
+    <li><a href="#checks">The three checks</a></li>
+    <li><a href="#marks">Marks on the photo</a></li>
+    <li><a href="#numbers">Numbers</a></li>
+    <li><a href="#eye">The eye and the views</a></li>
+    <li><a href="#visit">The visit</a></li>
+    <li><a href="#report">Visit report</a></li>
+    <li><a href="#batch">Many photos</a></li>
+    <li><a href="#models">Models and privacy</a></li>
+  </ul>
+
+  <section id="result" aria-labelledby="h-result">
+    <h2 id="h-result">The result</h2>
+    <p class="intro">Every photo gets one of three results, with one instruction under it.</p>
+    <dl class="terms">
+      <dt class="k">Keep</dt>
+      <dd>Good enough to grade. Move on to the next photo. A kept photo can still carry a small note, such as "The aim is
+        a little off centre; this photo is still usable": worth fixing next time, no need to retake.</dd>
+      <dt class="r">Retake</dt>
+      <dd>Not good enough to grade. The instruction names what to fix (focus, aim, or something in the way) and, where it
+        was measured, where on the photo.
+        <span class="eg">"Built from what was measured on this photo": the instruction is a standard sentence filled in
+          with the positions and areas measured on this photo, not free text.</span></dd>
+      <dt class="a">Not a fundus photo</dt>
+      <dd>The picture is unlike the fundus photos the detector learned from: a different camera mode, a widefield photo,
+        or not an eye at all. Check the camera mode or the file. These pictures are left out of the coach's note and the
+        visit report.</dd>
+    </dl>
+  </section>
+
+  <section id="checks" aria-labelledby="h-checks">
+    <h2 id="h-checks">The three checks</h2>
+    <p class="intro">Each photo is checked for the three usual reasons a fundus photo cannot be graded. They come from
+      the DeepDRiD dataset's photo-quality labels, which the checks were trained on.</p>
+    <dl class="terms">
+      <dt>Focus</dt>
+      <dd><b>Sharp</b> or <b>Blurry</b>. Blurry means the small vessels are not crisp: the camera was not focused on the
+        retina, or the patient moved.
+        <span class="eg">Fix: refocus on the small vessels before the shot.</span></dd>
+      <dt>Aim</dt>
+      <dd><b>Centred</b> or <b>Off centre</b>. Whether the photo is centred on the part of the retina this view should
+        show: the macula or the optic disc (see <a href="#eye">the eye and the views</a>).
+        <span class="eg">Fix: the instruction says which structure to move toward the middle, for example "Re-aim so the
+          optic disc moves to the middle".</span></dd>
+      <dt>Obstruction</dt>
+      <dd><b>Clear view</b> or <b>Shadow or glare</b>. Something covers part of the retina: a dark shadow (often an
+        eyelid, lashes or a small pupil) or glare and haze (often a smudged lens or the wrong working distance).
+        <span class="eg">Fix for a dark shadow: ask the patient to open wide and centre the camera on the pupil. For glare
+          or haze: wipe the lens and adjust the working distance.</span></dd>
+      <dt>(still gradable)</dt>
+      <dd>Next to a check on a kept photo: the problem was noticed, but the photo can still be graded.</dd>
+      <dt>(from the marked area)</dt>
+      <dd>Next to Obstruction: its score stayed under its line, but the blue area on the photo is larger than on almost
+        any clear photo, so it is pointed out anyway. See <a href="#marks">marks on the photo</a>.</dd>
+    </dl>
+  </section>
+
+  <section id="marks" aria-labelledby="h-marks">
+    <h2 id="h-marks">Marks on the photo</h2>
+    <p class="intro">The ring around the photo shows the three checks: Focus at the top, Aim on the right, Obstruction on
+      the left. Marks on the photo itself show what was measured.</p>
+    <div class="legend">
+      <figure><svg viewBox="0 0 54 54" aria-hidden="true"><path d="M10 40 A20 20 0 0 1 44 40" fill="none" stroke="#63c29e" stroke-width="4" stroke-linecap="round"/></svg>
+        <figcaption><b>Thin green arc</b>That check found no problem.</figcaption></figure>
+      <figure><svg viewBox="0 0 54 54" aria-hidden="true"><path d="M10 40 A20 20 0 0 1 44 40" fill="none" stroke="#f4b740" stroke-width="10" stroke-linecap="round"/></svg>
+        <figcaption><b>Thick amber arc</b>A reason for the retake. Its name turns amber too.</figcaption></figure>
+      <figure><svg viewBox="0 0 54 54" aria-hidden="true"><path d="M10 40 A20 20 0 0 1 44 40" fill="none" stroke="#f4b740" stroke-width="4" stroke-linecap="round"/></svg>
+        <figcaption><b>Thin amber arc</b>Noticed, but the photo is still gradable or the area was only marked.</figcaption></figure>
+      <figure><svg viewBox="0 0 54 54" aria-hidden="true"><path d="M10 40 A20 20 0 0 1 44 40" fill="none" stroke="#aab5c2" stroke-width="4" stroke-dasharray="3 7" stroke-linecap="round"/></svg>
+        <figcaption><b>Dotted grey arc</b>Not checked: the picture is not a fundus photo.</figcaption></figure>
+      <figure><svg viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="22" fill="#5a3b2a"/><circle cx="20" cy="27" r="8" fill="none" stroke="#e6ebf0" stroke-width="2.5"/><circle cx="35" cy="28" r="3.5" fill="#e6ebf0" stroke="#171c22" stroke-width="1.5"/></svg>
+        <figcaption><b>Ring and dot</b>The ring is the measured optic disc; the dot is the measured macula.</figcaption></figure>
+      <figure><svg viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="22" fill="#5a3b2a"/><circle cx="27" cy="27" r="13" fill="none" stroke="#e6ebf0" stroke-width="1.5" stroke-dasharray="3 4"/></svg>
+        <figcaption><b>Dashed circle</b>When aim is off: the zone, 2 disc diameters around the centre, where the view's structure should sit.</figcaption></figure>
+      <figure><svg viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="22" fill="#5a3b2a"/><path d="M9 20 Q14 9 27 8 Q24 18 18 27 Q12 28 9 20Z" fill="#3d8bff" fill-opacity="0.75" stroke="#fff" stroke-width="1.5"/></svg>
+        <figcaption><b>Blue area</b>Where something is in the way, measured on the photo.</figcaption></figure>
+    </div>
+    <dl class="terms">
+      <dt>Blue area</dt>
+      <dd>Shown on retakes. Always when the obstruction check asks for the retake; on a retake for another reason, only
+        when the area is larger than on 95 of 100 clear photos. The area around the macula is left out in that second
+        case, because the macula is naturally darker. It marks small squares of the photo that look most unlike the same
+        place on clear photos, measured with DINOv3.</dd>
+      <dt>Where</dt>
+      <dd>The blue area in words: what it looks like and where it is, for example "Dark shadow toward the upper left,
+        about a quarter of the photo".
+        <span class="eg"><b>Dark shadow</b>: the marked area is darker than the rest of the retina. <b>Glare or
+          haze</b>: brighter. <b>Something in the way</b>: neither clearly.</span></dd>
+      <dt>Positions</dt>
+      <dd>Where the optic disc and macula were found, in words, for example "the optic disc is near the centre; the
+        macula is near the right edge". Shown when aim is off.</dd>
+    </dl>
+  </section>
+
+  <section id="numbers" aria-labelledby="h-numbers">
+    <h2 id="h-numbers">Numbers under "What the check saw"</h2>
+    <dl class="terms">
+      <dt>Score</dt>
+      <dd>How strongly a check sees its problem, from 0 to 1. Higher means the problem is more likely. The bar shows the
+        score.</dd>
+      <dt>Flagged from</dt>
+      <dd>The line a score must reach for the check to count the problem; the tick on the bar marks it. Each line was set
+        on DeepDRiD validation photos, not on the photos used to report results.</dd>
+      <dt>Overall</dt>
+      <dd>"Good enough to grade" or "Not good enough to grade", from a fourth score trained on DeepDRiD's overall
+        quality label. A retake is asked when it reaches its line ("retake from"); the three checks then say why.</dd>
+      <dt>Fundus photo, energy</dt>
+      <dd>How unlike ordinary fundus photos the picture is. Low means familiar. Above the limit shown (about 6.9) the
+        picture is turned away as "Not a fundus photo". Held-out fundus photos scored about 0.3 to 6, widefield photos
+        17 to 54, and everyday pictures 75 to 210. This guard learned what fundus photos look like without any quality
+        labels.</dd>
+      <dt>Time</dt>
+      <dd>"Checked in": the time for the three checks and the positions. "Located in": the extra time to mark where an
+        obstruction is, on retakes.</dd>
+      <dt>Photo</dt>
+      <dd>Which eye, and which view, worked out from the photo itself. See <a href="#eye">the eye and the views</a>.</dd>
+      <dt>Sample</dt>
+      <dd>On a sample photo: its name and the DeepDRiD dataset's own label for it, to compare with the result.</dd>
+    </dl>
+  </section>
+
+  <section id="eye" aria-labelledby="h-eye">
+    <h2 id="h-eye">The eye and the views</h2>
+    <dl class="terms">
+      <dt>Fundus photo</dt>
+      <dd>A photo of the back of the eye (the retina), taken through the pupil with a fundus camera.</dd>
+      <dt>Optic disc</dt>
+      <dd>The round, pale spot where the optic nerve and the blood vessels enter the eye.</dd>
+      <dt>Macula</dt>
+      <dd>The darker area at the centre of vision, about 2.5 disc diameters from the optic disc. Its centre is the fovea.</dd>
+      <dt>Disc diameter</dt>
+      <dd>The width of the optic disc, about 1.5 to 1.8 mm: the usual ruler for distances on the retina. Aim is judged in
+        disc diameters, so it works the same on any camera or photo size.</dd>
+      <dt>The two views</dt>
+      <dd>Screening takes two photos of each eye: one <b>centred on the macula</b> and one <b>centred on the optic
+        disc</b>. A photo's view is whichever of the two is nearer the centre. Aim is good when that structure is within
+        2 disc diameters of the centre and the other one is well inside the picture (within 3).</dd>
+      <dt>Right or left eye</dt>
+      <dd>From the layout: in a right eye the optic disc sits to the right of the macula on the photo (true for 94% of
+        DeepDRiD test photos). Both must be found; otherwise the page says "Eye not measured".</dd>
+    </dl>
+  </section>
+
+  <section id="visit" aria-labelledby="h-visit">
+    <h2 id="h-visit">The visit (One photo page)</h2>
+    <p class="intro">A visit is every photo checked since <b>New patient</b> was last pressed. Retake Coach does not know
+      who the patient is: it reads no names or IDs, so press New patient between patients.</p>
+    <dl class="terms">
+      <dt>This visit</dt>
+      <dd>The checklist of the four views a screening visit needs: right and left eye, each centred on the macula and on
+        the disc.
+        <span class="eg"><span class="k">Kept</span>: a photo of that view was kept. <span class="r">Retake needed</span>:
+          photos of that view were taken, none kept yet. <b>Not yet</b>: no photo of that view so far.</span></dd>
+      <dt>Count line</dt>
+      <dd>For example "1 of 4 views kept. 5 checked, 1 kept, 3 to retake, 1 not a fundus photo; 1 where the eye or field
+        couldn't be measured". The last part counts fundus photos where the optic disc or the macula was not found, so the
+        view is unknown and the photo does not fill a box in the checklist.</dd>
+      <dt>Coach's note</dt>
+      <dd>One short note for the technician about the whole visit, not the last photo: the most common problem, the habit
+        that prevents it, and any view with no kept photo yet. The button says how many photos it covers, for example
+        "Coach's note on all 5 photos". It is written when you press it; after another photo, press it again.</dd>
+      <dt>Line under the note</dt>
+      <dd>What the photos it covers were, for example "3 kept, 1 sent back, 1 not a regular fundus photo (left out of the
+        note)", and who wrote it: Muse Spark and what the note cost, or "Standard summary" when Muse Spark is off or its
+        daily cap is reached.</dd>
+      <dt>What Muse Spark was given</dt>
+      <dd>Open it to see the exact text sent to Muse Spark: counts in words and the standard advice. Never a photo. If the
+        note contains a number that is not in that text, the standard summary is shown instead.</dd>
+      <dt>New patient</dt>
+      <dd>Starts the next visit: clears the screen, the checklist and the note. It is greyed out for a moment while a photo
+        is still being checked. When the visit report is on, the visit just finished is added to it first.</dd>
+    </dl>
+  </section>
+
+  <section id="report" aria-labelledby="h-report">
+    <h2 id="h-report">Visit report</h2>
+    <p class="intro">Each press of New patient adds one row for the visit just finished to a CSV file on the computer
+      running Retake Coach (<code>reports/visits.csv</code>), for training and review: for example, whether aim retakes per
+      visit are going down over the weeks. Download it from the link at the bottom of the One photo page. It is off on the
+      public demo.</p>
+    <div class="note">Counts only. No photos, file names, patient names or IDs, and no clock times: the date alone cannot
+      be matched to an appointment.</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Column</th><th scope="col">What it holds</th></tr></thead>
+        <tbody>
+          <tr><td><code>date</code></td><td>The day of the visit.</td></tr>
+          <tr><td><code>photos_checked</code></td><td>All pictures checked in the visit.</td></tr>
+          <tr><td><code>kept</code>, <code>sent_back</code></td><td>Fundus photos kept, and sent back for a retake.</td></tr>
+          <tr><td><code>not_fundus</code></td><td>Pictures turned away as not fundus photos.</td></tr>
+          <tr><td><code>focus</code>, <code>aim</code>, <code>obstruction</code></td><td>Photos sent back for each problem. A photo can have more than one.</td></tr>
+          <tr><td><code>dark_shadow</code>, <code>glare_or_haze</code></td><td>Of the obstruction retakes, how many were a dark shadow, and how many glare or haze.</td></tr>
+          <tr><td><code>views_kept</code></td><td>How many of the four views have a kept photo (0 to 4).</td></tr>
+          <tr><td><code>tries_right_macula</code> …</td><td>For each view: fundus photos taken of it (kept or sent back).</td></tr>
+          <tr><td><code>kept_right_macula</code> …</td><td>For each view: 1 if a photo of it was kept, else 0.</td></tr>
+          <tr><td><code>view_not_measured</code></td><td>Fundus photos whose eye or view could not be worked out.</td></tr>
+          <tr><td><code>coach_note</code></td><td>The coach's note, if one was written after the visit's last photo; otherwise empty.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="batch" aria-labelledby="h-batch">
+    <h2 id="h-batch">Many photos page</h2>
+    <p class="intro">For checking a whole session or folder at once. It does not group photos by patient, so its coach's
+      note leaves out missing views.</p>
+    <dl class="terms">
+      <dt>Table columns</dt>
+      <dd><b>File</b>: the file name. <b>Result</b>: keep, retake, not a fundus photo, or unreadable. <b>What to fix</b>:
+        the instruction. <b>Eye</b> and <b>Centred on</b>: the measured eye and view. <b>Checked</b>: when the photo was
+        checked.</dd>
+      <dt>Unreadable</dt>
+      <dd>The file is not a picture the check can open, or the check did not finish. Export the photo as a JPEG and try
+        again.</dd>
+      <dt>Watching a folder</dt>
+      <dd>When the app is started with a folder to watch (for example the folder a camera exports to over Wi-Fi), each
+        new photo that lands there is checked and appears at the top of the table.</dd>
+      <dt>Download CSV</dt>
+      <dd>The table as a spreadsheet file. Unlike the visit report, it contains the file names, so keep it where patient
+        files are kept.</dd>
+      <dt>Clear list</dt>
+      <dd>Empties the table and starts over. It adds nothing to the visit report.</dd>
+    </dl>
+  </section>
+
+  <section id="models" aria-labelledby="h-models">
+    <h2 id="h-models">Models and privacy</h2>
+    <dl class="terms">
+      <dt>Detector</dt>
+      <dd>The badge at the top. <b>DINOv2</b> is a Meta image model; it turns each photo into features, and small checks
+        trained on DeepDRiD read them. <b>DINOv3</b>, also from Meta, measures where an obstruction is (the blue area).
+        Both run on the computer next to the camera, and photos stay on it.</dd>
+      <dt>Coach's note badge</dt>
+      <dd><b>Muse Spark</b>, Meta's language model, reached through the Meta Model API, writes the coach's note from
+        counts in words only. The badge shows how much of today's spending cap is used, or "standard" when there is no
+        key or the cap is reached; the note is then a fixed summary of the same counts.</dd>
+      <dt>What leaves the computer</dt>
+      <dd>Only the coach's note request: counts in words, no photos, no file names. Everything else stays on the computer
+        running Retake Coach, and what a visit holds is kept in memory until New patient or a restart.</dd>
+    </dl>
+  </section>
+</main>
+
+<footer>
+  <p>Retake Coach checks photo quality only and gives no medical advice. Quality labels: DeepDRiD (CC BY-SA 4.0).
+    <a href="/">Back to checking photos</a>.</p>
+</footer>
+</body>
+</html>

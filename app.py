@@ -315,6 +315,10 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
     def batch():
         return FileResponse(HERE / "static" / "batch.html")
 
+    @app.get("/guide")
+    def guide():
+        return FileResponse(HERE / "static" / "guide.html")
+
     @app.get("/api/status")
     def status():
         return dict(budget=budget.status(), thresholds=dict(zip(cc.Coach.HEADS, map(float, coach.thr))),
