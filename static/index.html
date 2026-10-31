@@ -140,6 +140,7 @@ main {
 .visit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .note { margin: 16px 0 6px; background: var(--panel); border-left: 4px solid var(--keep); border-radius: 0 10px 10px 0; padding: 12px 16px; max-width: 72ch; }
 .note p { margin: 0; }
+.note .head { font-size: 13px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 6px; }
 .note .src { color: var(--ink-2); font-size: 14px; margin-top: 6px; }
 .note details { margin-top: 6px; font-size: 14px; color: var(--ink-2); }
 .note summary { cursor: pointer; }
@@ -204,7 +205,7 @@ footer p { margin: 4px 0; }
   </section>
 
   <section class="session" id="session" hidden>
-    <div class="visit-head"><h2>This visit</h2><div class="visit-actions"><button class="ghost" id="note-btn" type="button">Coach's note</button><button class="ghost" id="new-patient" type="button">New patient</button></div></div>
+    <div class="visit-head"><h2>This visit</h2><div class="visit-actions"><button class="ghost" id="note-btn" type="button" title="One summary of every photo checked in this visit, written when you press it">Coach's note</button><button class="ghost" id="new-patient" type="button">New patient</button></div></div>
     <table class="visit" id="visit" aria-label="Photos this visit needs"></table>
     <p class="count" id="session-count"></p>
     <div class="note" id="note" aria-live="polite" hidden></div>
@@ -355,10 +356,11 @@ function render(r, note) {
 
 function addToSession(r, note) {
   session.unshift({ r, note });
-  $('session').hidden = false; $('note').hidden = true;
+  $('session').hidden = false; $('note').hidden = true;      // a new photo: the old note no longer covers the visit
   const n = session.length, re = session.filter(s => s.r.verdict === 'retake').length;
   const away = session.filter(s => s.r.verdict === 'not_fundus').length;
   const done = drawVisit();
+  $('note-btn').textContent = noteLabel(n);
   const unknown = session.filter(s => s.r.verdict !== 'not_fundus' && (!s.r.eye || !s.r.field)).length;
   $('session-count').textContent = `${done} of 4 views kept. ${n} checked, ${n - re - away} kept, ${re} to retake`
     + (away ? `, ${away} not ${away === 1 ? 'a fundus photo' : 'fundus photos'}` : '')
@@ -399,26 +401,29 @@ async function check(blob, note) {
 // and the server passes only their counts in words to Muse Spark.
 const slim = r => ({ verdict: r.verdict, problems: r.problems || [], eye: r.eye || null, field: r.field || null,
                      obstruction: r.obstruction ? { where: r.obstruction.where, tone: r.obstruction.tone } : null });
+// The note button says how many photos the note will cover: it sums up all of them, not the last one.
+function noteLabel(n) { return n > 1 ? `Coach's note on all ${n} photos` : n === 1 ? "Coach's note on 1 photo" : "Coach's note"; }
 async function coachNote(results, box, btn) {
-  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Writing…';
+  const n = results.length; btn.disabled = true; btn.textContent = 'Writing…';
   try {
     const res = await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ results: results.map(slim) }) });
     const b = await res.json();
     if (!res.ok) throw new Error(b.detail || 'failed');
     const src = b.source === 'muse-spark' ? `Written by Muse Spark for ${money(b.cost)}. No photos were sent.`
               : `Standard summary${b.source.startsWith('template (') ? ` (${esc(b.source.slice(10, -1))})` : ''}.`;
-    box.innerHTML = `<p>${esc(b.note)}</p><p class="src">${esc(b.covers || '')} ${src}</p>
+    box.innerHTML = `<p class="head">Coach's note: ${n === 1 ? 'the 1 photo' : `all ${n} photos`} in this visit</p>
+      <p>${esc(b.note)}</p><p class="src">${esc(b.covers || '')} ${src}</p>
       <details><summary>What Muse Spark was given</summary><pre>${esc(b.facts)}</pre></details>`;
     if (b.budget) setStatus(b.budget);
   } catch (e) {
     box.innerHTML = '<p>The note could not be written. Make sure app.py is running.</p>';
   }
-  box.hidden = false; btn.textContent = label; btn.disabled = false;
+  box.hidden = false; btn.textContent = noteLabel(session.length); btn.disabled = false;
 }
 
 $('note-btn').addEventListener('click', () => coachNote(session.map(x => x.r), $('note'), $('note-btn')));
 $('new-patient').addEventListener('click', () => {
-  session = []; $('session').hidden = true; $('session-thumbs').innerHTML = ''; $('note').hidden = true;
+  session = []; $('session').hidden = true; $('session-thumbs').innerHTML = ''; $('note').hidden = true; $('note-btn').textContent = noteLabel(0);
   fetch('/api/clear?which=visit&sid=' + encodeURIComponent(SID), { method: 'POST' }).catch(() => {});
 });
 $('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) check(f, ''); e.target.value = ''; });

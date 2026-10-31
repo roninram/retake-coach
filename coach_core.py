@@ -749,14 +749,14 @@ def session_facts(results):
 
 
 def note_scope(f):
-    """One line under the note saying which photos it covers, so a photo that was turned away is visibly left out."""
+    """One line under the note saying what the photos it covers were, so a photo that was turned away is visibly left out."""
     parts = [f"{f['kept']} kept", f"{f['back']} sent back"]
     if f["other"]:
         parts.append(f"{f['other']} not {'a regular fundus photo' if f['other'] == 1 else 'regular fundus photos'}")
     if f["unread"]:
         parts.append(f"{f['unread']} unreadable")
-    return (f"From {f['n']} photo{'' if f['n'] == 1 else 's'}: " + ", ".join(parts)
-            + (" (left out of the note)" if f["other"] or f["unread"] else "") + ".")
+    s = ", ".join(parts) + (" (left out of the note)" if f["other"] or f["unread"] else "") + "."
+    return s[0].upper() + s[1:]
 
 
 def note_template(f):

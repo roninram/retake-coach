@@ -66,6 +66,7 @@ table.results { width: 100%; border-collapse: collapse; font-size: 15px; }
 }
 .note { margin: 16px 0 6px; background: var(--panel); border-left: 4px solid var(--keep); border-radius: 0 10px 10px 0; padding: 12px 16px; max-width: 72ch; }
 .note p { margin: 0; }
+.note .head { font-size: 13px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 6px; }
 .note .src { color: var(--ink-2); font-size: 14px; margin-top: 6px; }
 .note details { margin-top: 6px; font-size: 14px; color: var(--ink-2); }
 .note summary { cursor: pointer; }
@@ -102,7 +103,7 @@ footer { max-width: 1160px; margin: 0 auto; padding: 8px clamp(16px, 4vw, 40px) 
     <input class="sr" type="file" id="folder" webkitdirectory multiple>
   </div>
   <div class="options">
-    <button class="btn ghost" id="note-btn" type="button" disabled>Coach's note</button>
+    <button class="btn ghost" id="note-btn" type="button" disabled title="One summary of every photo in this list, written when you press it">Coach's note</button>
     <button class="btn ghost" id="csv" type="button" disabled>Download CSV</button>
     <button class="btn ghost" id="clear" type="button" disabled>Clear list</button>
   </div>
@@ -145,8 +146,9 @@ function draw() {
   const n = rows.length, k = rows.filter(r => r.verdict === 'keep').length, re = rows.filter(r => r.verdict === 'retake').length;
   const away = n - k - re;
   $('summary').innerHTML = n ? `${n} checked: <span class="k">${k} keep</span>, <span class="r">${re} retake</span>`
-    + (away ? `, ${away} not fundus photos or unreadable` : '') + '.' : '';
+    + (away ? `, ${away} ${away === 1 ? 'not a fundus photo or unreadable' : 'not fundus photos or unreadable'}` : '') + '.' : '';
   $('csv').disabled = !n; $('note-btn').disabled = !n; $('clear').disabled = !n; $('note').hidden = true;
+  $('note-btn').textContent = noteLabel(n);
   $('rows').innerHTML = n ? rows.map(r => `<tr class="${r.verdict}">
       <td>${r.preview ? `<img alt="" src="${r.preview}">` : ''}</td>
       <td class="file">${esc(r.name)}</td>
@@ -211,21 +213,24 @@ drop.addEventListener('drop', async e => {
 // and the server passes only their counts in words to Muse Spark.
 const slim = r => ({ verdict: r.verdict, problems: r.problems || [], eye: r.eye || null, field: r.field || null,
                      obstruction: r.obstruction ? { where: r.obstruction.where, tone: r.obstruction.tone } : null });
+// The note button says how many photos the note will cover: it sums up all of them, not the last one.
+function noteLabel(n) { return n > 1 ? `Coach's note on all ${n} photos` : n === 1 ? "Coach's note on 1 photo" : "Coach's note"; }
 async function coachNote(results, box, btn) {
-  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Writing…';
+  const n = results.length; btn.disabled = true; btn.textContent = 'Writing…';
   try {
     const res = await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ results: results.map(slim), scope: 'batch' }) });
     const b = await res.json();
     if (!res.ok) throw new Error(b.detail || 'failed');
     const src = b.source === 'muse-spark' ? `Written by Muse Spark for ${money(b.cost)}. No photos were sent.`
               : `Standard summary${b.source.startsWith('template (') ? ` (${esc(b.source.slice(10, -1))})` : ''}.`;
-    box.innerHTML = `<p>${esc(b.note)}</p><p class="src">${esc(b.covers || '')} ${src}</p>
+    box.innerHTML = `<p class="head">Coach's note: ${n === 1 ? 'the 1 photo' : `all ${n} photos`} in this list</p>
+      <p>${esc(b.note)}</p><p class="src">${esc(b.covers || '')} ${src}</p>
       <details><summary>What Muse Spark was given</summary><pre>${esc(b.facts)}</pre></details>`;
     if (b.budget) setStatus(b.budget);
   } catch (e) {
     box.innerHTML = '<p>The note could not be written. Make sure app.py is running.</p>';
   }
-  box.hidden = false; btn.textContent = label; btn.disabled = false;
+  box.hidden = false; btn.textContent = noteLabel(rows.length); btn.disabled = false;
 }
 
 $('note-btn').addEventListener('click', () => coachNote(rows, $('note'), $('note-btn')));
