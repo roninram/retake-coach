@@ -137,6 +137,7 @@ main {
 .ghost:hover { border-color: var(--ink-2); }
 .ghost:disabled { opacity: .45; cursor: default; }
 .cleared { color: var(--keep); font-weight: 600; }
+.cleared a, footer a { color: inherit; }
 .demo { border-left: 4px solid var(--retake); background: var(--panel); border-radius: 0 10px 10px 0; padding: 10px 16px; margin: 0 0 20px; font-size: 15px; color: var(--ink); max-width: 90ch; }
 
 .visit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -218,6 +219,7 @@ footer p { margin: 4px 0; }
 <footer>
   <p>Detector: Meta's DINOv2 image features with small heads trained on DeepDRiD photo-quality labels (CC BY-SA 4.0). Where an obstruction is: DINOv3 patch features, when installed. Both run on this computer, and photos stay on it.</p>
   <p>Instructions are standard sentences built from what was measured. The coach's note is written by Muse Spark through the Meta Model API from the visit's counts in words, never photos, under a daily spending cap; without it, a standard summary is shown.</p>
+  <p id="report-note" hidden>New patient adds a row of counts for the visit to the <a href="/api/report" download="retake_coach_visits.csv">visit report</a> on this computer: the date, retakes and why, and which views were kept. No photos, file names, patient details or clock times.</p>
 </footer>
 
 <script>
@@ -413,7 +415,7 @@ function noteLabel(n) { return n > 1 ? `Coach's note on all ${n} photos` : n ===
 async function coachNote(results, box, btn) {
   const n = results.length; btn.disabled = true; btn.textContent = 'Writing…';
   try {
-    const res = await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ results: results.map(slim) }) });
+    const res = await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ results: results.map(slim), sid: SID }) });
     const b = await res.json();
     if (!res.ok) throw new Error(b.detail || 'failed');
     const src = b.source === 'muse-spark' ? `Written by Muse Spark for ${money(b.cost)}. No photos were sent.`
@@ -436,9 +438,13 @@ $('new-patient').addEventListener('click', () => {
   vf.classList.remove('has-photo', 'drawn', 'checking'); $('photo').removeAttribute('href'); $('obstruction-layer').removeAttribute('href');
   $('positions').innerHTML = ''; drawArcs({}); $('drop-lead').textContent = 'Drop the photo you just took'; $('error').textContent = '';
   result.className = 'result idle';
-  result.innerHTML = IDLE + '<p class="cleared" role="status">New patient. The last visit was cleared.</p>';
+  result.innerHTML = IDLE + '<p class="cleared" id="cleared" role="status">New patient. The last visit was cleared.</p>';
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  fetch('/api/clear?which=visit&sid=' + encodeURIComponent(SID), { method: 'POST' }).catch(() => {});
+  fetch('/api/clear?which=visit&sid=' + encodeURIComponent(SID), { method: 'POST' }).then(r => r.json()).then(b => {
+    const el = $('cleared');
+    if (b.saved && el) el.innerHTML = `New patient. The last visit (${b.photos} photo${b.photos === 1 ? '' : 's'}) was added to the
+      <a href="/api/report" download="retake_coach_visits.csv">visit report</a>: counts only, no photos or patient details.`;
+  }).catch(() => {});
 });
 $('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) check(f, ''); e.target.value = ''; });
 ['dragenter', 'dragover'].forEach(t => vf.addEventListener(t, e => { e.preventDefault(); vf.classList.add('dragging'); }));
@@ -451,7 +457,7 @@ fetch('/api/state?sid=' + encodeURIComponent(SID)).then(r => r.json()).then(st =
   for (const r of st.visit) addToSession(r, r.sample);
   const last = st.visit[st.visit.length - 1]; render(last, last.sample);
 }).catch(() => {}).then(() => fetch('/api/status')).then(r => r.json()).then(s => {
-  setStatus(s.budget); $('demo').hidden = !s.demo;
+  setStatus(s.budget); $('demo').hidden = !s.demo; $('report-note').hidden = !s.report;
   if (s.obstruction_map && s.obstruction_map !== s.detector) $('detector-status').innerHTML = 'Detector: <b>DINOv2 + DINOv3 on this computer</b>';
 }).catch(() => {
   $('wording-status').innerHTML = "Coach's note: <b>server not reachable</b>";

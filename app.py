@@ -14,12 +14,18 @@ run here, and each instruction is a standard sentence built from what they measu
 coach's note is written by Muse Spark (Meta Model API) from the session's counts in words, within the budget below.
 No photo is sent.
 
+Visit report: pressing New patient adds one row of counts for that visit to reports/visits.csv (--report to move it, or
+--report "" to switch it off): the date, photos kept and sent back, the problems found, which views were kept and in how
+many tries, and the coach's note if one was written. No photos, file names, patient details or clock times. It is off on
+the public demo (RC_DEMO).
+
 Budget for the coach's note (environment variables, dollars at Muse Spark 1.3 Standard prices):
     MUSE_DAILY_USD      default 0.25    MUSE_DAILY_REQUESTS default 60    MUSE_TOTAL_USD default 1.00
 Past any cap the note is a fixed summary of the same counts.
 """
 import argparse
 import base64
+import csv
 import datetime
 import io
 import os
@@ -64,6 +70,49 @@ class Budget:
         return dict(muse=self.client is not None, can_call=w.can_call(), spent_today=round(w.spent, 4),
                     cap_today=round(w.max_usd, 4), requests_today=w.n, request_cap=w.max_requests,
                     spent_total=round(self.spent_before_today + w.spent, 4), cap_total=self.total_usd)
+
+
+class VisitLog:
+    """The visit report: one CSV row per visit, added when New patient is pressed, for training and review.
+    Counts only. No photos, file names, patient details or clock times: the date is the only time kept, so a row cannot
+    be matched to an appointment."""
+    VIEWS = {("right", "macula"): "right_macula", ("right", "disc"): "right_disc",
+             ("left", "macula"): "left_macula", ("left", "disc"): "left_disc"}
+    COLUMNS = (["date", "photos_checked", "kept", "sent_back", "not_fundus", *cc.PROBLEMS, "dark_shadow", "glare_or_haze",
+                "views_kept"] + [f"{k}_{v}" for v in VIEWS.values() for k in ("tries", "kept")]
+               + ["view_not_measured", "coach_note"])
+
+    def __init__(self, path):
+        self.path, self.lock = Path(path), threading.Lock()
+
+    @classmethod
+    def row(cls, results, note=""):
+        rs = [cc._clean_result(r) for r in results]
+        kept = [r for r in rs if r["verdict"] == "keep"]
+        back = [r for r in rs if r["verdict"] == "retake"]
+        hidden = [r for r in back if "obstruction" in r["problems"]]
+        row = dict(date=datetime.date.today().isoformat(), photos_checked=len(rs), kept=len(kept), sent_back=len(back),
+                   not_fundus=len(rs) - len(kept) - len(back), **{p: sum(p in r["problems"] for r in back) for p in cc.PROBLEMS},
+                   dark_shadow=sum(r["tone"] == "darker" for r in hidden), glare_or_haze=sum(r["tone"] == "brighter" for r in hidden))
+        for v, name in cls.VIEWS.items():               # tries: fundus photos of that view; kept: 1 once one was kept
+            row[f"tries_{name}"] = sum((r["eye"], r["field"]) == v for r in kept + back)
+            row[f"kept_{name}"] = int(any((r["eye"], r["field"]) == v for r in kept))
+        row["views_kept"] = sum(row[f"kept_{n}"] for n in cls.VIEWS.values())
+        row["view_not_measured"] = sum(not (r["eye"] and r["field"]) for r in kept + back)
+        row["coach_note"] = note or ""
+        return row
+
+    def add(self, results, note=""):
+        row = self.row(results, note)
+        with self.lock:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            new = not self.path.exists() or self.path.stat().st_size == 0
+            with open(self.path, "a", newline="", encoding="utf-8") as f:
+                w = csv.DictWriter(f, fieldnames=self.COLUMNS)
+                if new:
+                    w.writeheader()
+                w.writerow(row)
+        return row
 
 
 def preview(x):
@@ -209,12 +258,13 @@ class Store:
 
     def __init__(self, limit=1000, sessions=200):
         self.data, self.lock, self.limit, self.sessions = OrderedDict(), threading.Lock(), limit, sessions
+        self.notes = {}                     # sid -> (photos the visit's last coach's note covered, its text)
 
     def _lists(self, sid):
         if sid not in self.data:
             self.data[sid] = {"visit": [], "batch": []}
             while len(self.data) > self.sessions:
-                self.data.popitem(last=False)
+                self.notes.pop(self.data.popitem(last=False)[0], None)
         self.data.move_to_end(sid)
         return self.data[sid]
 
@@ -225,8 +275,19 @@ class Store:
             del lst[:-self.limit]
 
     def clear(self, sid, which):
+        self.take(sid, which)
+
+    def take(self, sid, which):
+        """Empty one list and return what it held, with the visit's last coach's note as (photos covered, text)."""
         with self.lock:
-            self._lists(sid)[which] = []
+            lists = self._lists(sid)
+            results, lists[which] = lists[which], []
+            return results, (self.notes.pop(sid, None) if which == "visit" else None)
+
+    def set_note(self, sid, n, text):
+        with self.lock:
+            self._lists(sid)
+            self.notes[sid] = (n, text)
 
     def get(self, sid):
         with self.lock:
@@ -239,7 +300,8 @@ def session_id(sid):
     return sid[:64] if sid.replace("-", "").isalnum() else "local"
 
 
-def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=None, store=None):
+def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=None, store=None, report=None):
+    """report: a VisitLog, to add a row of counts for each visit when New patient is pressed (None: off)."""
     app = FastAPI(title="Retake Coach")
     checker = checker or (watcher.checker if watcher else Checker(coach, encoder, budget))
     store = store or Store()
@@ -257,7 +319,7 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
     def status():
         return dict(budget=budget.status(), thresholds=dict(zip(cc.Coach.HEADS, map(float, coach.thr))),
                     energy_limit=coach.g_thr, watching=str(watcher.folder) if watcher else None,
-                    demo=bool(os.environ.get("RC_DEMO")),
+                    demo=bool(os.environ.get("RC_DEMO")), report=bool(report),
                     detector=coach.backbone, obstruction_map=checker.omap.backbone if checker.omap else None)
 
     @app.get("/api/examples")
@@ -302,13 +364,29 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
 
     @app.post("/api/clear")
     def clear(which: str, sid: str = ""):
-        """'visit' (New patient) or 'batch' (Clear list; also forgets photos shown from the watched folder)."""
+        """'visit' (New patient: also adds the visit's row to the report, if on) or 'batch' (Clear list; also forgets
+        photos shown from the watched folder)."""
         if which not in ("visit", "batch"):
             raise HTTPException(400, "Clear 'visit' or 'batch'.")
-        store.clear(session_id(sid), which)
+        results, note = store.take(session_id(sid), which)
+        saved = False
+        if which == "visit" and report and results:
+            n, text = note or (0, "")
+            try:
+                report.add(results, text if n == len(results) else "")     # a note written before the last photo is left out
+                saved = True
+            except OSError as e:
+                print("visit report:", type(e).__name__, e)
         if which == "batch" and watcher:
             watcher.clear()
-        return dict(cleared=which)
+        return dict(cleared=which, photos=len(results), saved=saved)
+
+    @app.get("/api/report")
+    def visit_report():
+        """The visit report as a CSV file."""
+        if not report or not report.path.is_file():
+            raise HTTPException(404, "No visit report yet: it gets a row each time New patient is pressed.")
+        return FileResponse(report.path, media_type="text/csv", filename="retake_coach_visits.csv")
 
     @app.post("/api/note")
     def coach_note(payload: dict = Body(...)):
@@ -327,6 +405,8 @@ def create_app(coach, encoder, budget, examples_dir=None, watcher=None, checker=
                 out = budget.today().note(facts["text"], fallback)
         else:
             out = dict(text=fallback, source="template", cost=0.0)
+        if payload.get("scope") != "batch" and payload.get("sid"):            # kept for the visit report
+            store.set_note(session_id(str(payload["sid"])), len(results), out["text"])
         return dict(note=out["text"], source=out["source"], cost=round(out["cost"], 5), facts=facts["text"],
                     covers=cc.note_scope(facts), budget=budget.status())
 
@@ -346,6 +426,7 @@ def main():
     ap.add_argument("--map", default="models/obstruction_map.npz", help="optional: where an obstruction is (DINOv3; needs HF_TOKEN)")
     ap.add_argument("--examples", default="examples")
     ap.add_argument("--watch", default=None, help="folder to check new photos in as they arrive")
+    ap.add_argument("--report", default="reports/visits.csv", help='visit report, a row of counts per visit ("" for off)')
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8000)
     a = ap.parse_args()
@@ -371,7 +452,9 @@ def main():
             omap = None
     checker = Checker(coach, encoder, budget, omap, map_encoder)
     watcher = Watcher(a.watch, checker).start() if a.watch else None
-    app = create_app(coach, encoder, budget, a.examples, watcher, checker)
+    report = VisitLog(a.report) if a.report and not os.environ.get("RC_DEMO") else None
+    print("visit report:", report.path if report else "off")
+    app = create_app(coach, encoder, budget, a.examples, watcher, checker, report=report)
     import uvicorn
     uvicorn.run(app, host=a.host, port=a.port)
 

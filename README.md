@@ -32,6 +32,13 @@ What's on the two pages:
 Switching between the pages, or reloading one, keeps what has been checked. The server holds it in memory until it
 restarts; "New patient" and "Clear list" start over.
 
+**Visit report.** Each press of "New patient" adds one row for the visit just finished to `reports/visits.csv` on the
+computer running Retake Coach. The row holds the date, the photos kept and sent back, which problems caused the
+retakes, which of the four views were kept and in how many tries, and the coach's note if one was written. A trainer
+or the technician can follow it over weeks, for example to see whether aim retakes per visit are going down. It keeps
+counts only: no photos, file names, patient details or clock times. The date alone cannot be matched to an
+appointment. The report is off on the public demo.
+
 A new camera can be added from a few of its own ordinary photos, with no labels: the guard learns what that camera's
 photos look like (`notebooks/8_eyer_check.ipynb`, written for the Phelcom Eyer2 handheld camera).
 
@@ -157,6 +164,10 @@ before the test set was scored. ([results/final_model_report.txt](results/final_
   the area within 1.25 disc diameters of the measured macula is left out, because the macula is naturally darker: the
   first version marked the macula of 354_r1 as a shadow. The pasted shadows and glare are a stand-in for real ones, and the marking
   level was set on the same validation photos (1% of patches on clean photos).
+- **It does not know who the patient is.** A visit is every photo checked since "New patient" was last pressed. The
+  eye and the view come from the photo itself, and no name or ID is read. If the button is not pressed between
+  patients, two patients' photos count as one visit in the checklist, the coach's note and the visit report. The
+  "Many photos" page makes no attempt to group by patient, so its note leaves out missing views.
 - **Training data comes from one dataset** (three hospitals). On synthetically damaged IDRiD photos, it often named
   focus for shadows and crops. Synthetic damage is a weak stand-in for real problems, but it is a reason to check a
   new camera before relying on the tool.
@@ -214,7 +225,7 @@ the IDRiD zips (*A. Segmentation*, *B. Disease Grading*, *C. Localization*). The
    words only (capped at $0.04); the tool does not use those rewrites.
 8. `notebooks/5_run_demo.ipynb`: starts both pages and prints their links. Muse Spark (the coach's note) is capped at
    $0.25 a day and $1 in total. Photos dropped into `eyer_inbox/` in the Drive folder appear on the many-photos page as
-   they arrive.
+   they arrive. The visit report is saved to `reports/visits.csv` in the Drive folder, and the last cell shows it.
    Without the map file, obstruction retakes use standard wording.
 
 Further checks, each optional:
@@ -248,6 +259,7 @@ export MODEL_API_KEY=...        # optional; Muse Spark writes the coach's note, 
 export HF_TOKEN=...             # optional; DINOv3 for the obstruction map (accept its licence on Hugging Face first)
 python app.py                   # http://127.0.0.1:8000, uses models/coach_model.npz, locator.npz and obstruction_map.npz
 python app.py --watch ~/EyerInbox   # also checks each new photo that lands in that folder (see /batch)
+python app.py --report ""       # no visit report (default: a row per visit in reports/visits.csv)
 ```
 
 `MUSE_DAILY_USD`, `MUSE_DAILY_REQUESTS` and `MUSE_TOTAL_USD` set the coach's-note caps (defaults $0.25, 60 and $1.00).
