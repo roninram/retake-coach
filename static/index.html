@@ -135,6 +135,8 @@ main {
 .visit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .ghost { background: none; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer; }
 .ghost:hover { border-color: var(--ink-2); }
+.ghost:disabled { opacity: .45; cursor: default; }
+.cleared { color: var(--keep); font-weight: 600; }
 .demo { border-left: 4px solid var(--retake); background: var(--panel); border-radius: 0 10px 10px 0; padding: 10px 16px; margin: 0 0 20px; font-size: 15px; color: var(--ink); max-width: 90ch; }
 
 .visit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -263,6 +265,8 @@ function drawArcs(states) {           // states: {focus: 'found'|'clear'|'off'|'
   }
 }
 drawArcs({});
+const IDLE = result.innerHTML;          // the opening text, shown again for a new patient
+let inFlight = 0;                       // checks still running: New patient waits for them
 
 function drawPositions(r) {          // measured optic disc (ring) and macula (dot); the 2-disc-diameter zone when aim is off
   const g = $('positions'); g.innerHTML = '';
@@ -378,6 +382,7 @@ function addToSession(r, note) {
 
 async function check(blob, note) {
   $('error').textContent = '';
+  inFlight++; $('new-patient').disabled = true;
   vf.classList.add('checking');
   if (!vf.classList.contains('has-photo')) {
     vf.classList.add('has-photo'); $('photo').setAttribute('href', URL.createObjectURL(blob));
@@ -393,6 +398,8 @@ async function check(blob, note) {
     vf.classList.remove('checking');
     if (!session.length) { vf.classList.remove('has-photo'); $('photo').removeAttribute('href'); }
     $('error').textContent = e.message.includes('fetch') ? 'The check server is not reachable. Make sure app.py is running.' : e.message;
+  } finally {
+    if (--inFlight === 0) $('new-patient').disabled = false;
   }
 }
 
@@ -422,8 +429,15 @@ async function coachNote(results, box, btn) {
 }
 
 $('note-btn').addEventListener('click', () => coachNote(session.map(x => x.r), $('note'), $('note-btn')));
+// New patient: forget this visit here and on the server, and clear the screen so the last patient's photo is not left up.
 $('new-patient').addEventListener('click', () => {
+  if (inFlight) return;
   session = []; $('session').hidden = true; $('session-thumbs').innerHTML = ''; $('note').hidden = true; $('note-btn').textContent = noteLabel(0);
+  vf.classList.remove('has-photo', 'drawn', 'checking'); $('photo').removeAttribute('href'); $('obstruction-layer').removeAttribute('href');
+  $('positions').innerHTML = ''; drawArcs({}); $('drop-lead').textContent = 'Drop the photo you just took'; $('error').textContent = '';
+  result.className = 'result idle';
+  result.innerHTML = IDLE + '<p class="cleared" role="status">New patient. The last visit was cleared.</p>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   fetch('/api/clear?which=visit&sid=' + encodeURIComponent(SID), { method: 'POST' }).catch(() => {});
 });
 $('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) check(f, ''); e.target.value = ''; });
