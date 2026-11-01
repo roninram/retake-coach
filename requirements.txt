@@ -5,7 +5,7 @@ pandas
 openpyxl
 scikit-learn
 torch
-transformers>=4.40
+transformers>=4.56          # DINOv3 (the obstruction map) needs 4.56 or later
 fastapi
 uvicorn
 python-multipart

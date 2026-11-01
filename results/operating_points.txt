@@ -1,0 +1,11 @@
+== Retake line trade-off: DeepDRiD test, 220 not-good-enough and 180 good photos ==
+Each line is chosen on validation photos only: today's sends back at most 25% of good validation photos, and
+'catch N%' catches N% of not-good-enough validation photos. Test results have 95% bootstrap intervals.
+        line  score line val: caught/good back  test: caught test: good sent back  per 100: retakes  per 100: bad kept
+today's line       0.540             69% / 25% 74% (68%-79%)        23% (17%-30%)                33                  5
+   catch 80%       0.444             80% / 37% 83% (78%-88%)        34% (27%-41%)                44                  3
+   catch 85%       0.425             85% / 40% 86% (81%-91%)        38% (32%-46%)                48                  3
+   catch 90%       0.356             90% / 50% 90% (86%-94%)        50% (43%-57%)                58                  2
+   catch 95%       0.280             95% / 65% 95% (92%-98%)        64% (57%-71%)                71                  1
+
+'per 100' applies the test rates to an example clinic mix of 20 not-good-enough photos in 100 (reported ungradable rates are 12-24%): retakes asked, and bad photos kept.

@@ -1,5 +1,7 @@
 # Retake Coach
 
+[![tests](https://github.com/roninram/retake-coach/actions/workflows/tests.yml/badge.svg)](https://github.com/roninram/retake-coach/actions/workflows/tests.yml)
+
 Catch an ungradable fundus photo while the patient is still in the chair.
 
 In diabetic eye screening, a technician photographs the retina and sends the photos on to be graded. When a photo is
@@ -19,6 +21,7 @@ visit or a batch, Muse Spark writes a short coach's note from the session's coun
 one habit that would prevent it, and any view still missing.
 
 It checks photo quality only. It does not look for disease and gives no medical advice.
+The [model card](MODEL_CARD.md) puts intended use, data, results, limits and privacy on one page.
 
 What's on the two pages:
 - **One photo** (`/`): keep or retake, one instruction, the measured disc and macula on the photo, and for an
@@ -95,6 +98,21 @@ before the test set was scored. ([results/final_model_report.txt](results/final_
 | Overall "not good enough for diagnosis" | 0.82 (0.78–0.86) | 0.74 |
 
 - **Retake decision:** it catches 74% of not-good-enough photos (162 of 220) and sends back 23% of good ones (42 of 180).
+- **Choosing the retake line:** a stricter line catches more bad photos, but at a steep price, because the overall
+  check is the weakest of the four (AUROC 0.82). Each line below was chosen on validation photos and scored on test
+  ([results/operating_points.txt](results/operating_points.txt), [figure](results/operating_points.png)):
+
+  | Line | Bad photos caught | Good photos sent back | Per 100 photos with 20 bad: retakes, bad kept |
+  |---|---|---|---|
+  | Today's | 74% (68–79%) | 23% (17–30%) | 33, 5 |
+  | Catch 85% | 86% (81–91%) | 38% (32–46%) | 48, 3 |
+  | Catch 90% | 90% (86–94%) | 50% (43–57%) | 58, 2 |
+  | Catch 95% | 95% (92–98%) | 64% (57–71%) | 71, 1 |
+
+  Moving to the 90% line would ask for about 25 more retakes per 100 photos to keep 3 fewer bad ones. Which line is
+  right depends on the clinic. A retake costs seconds while the patient is in the chair, though each extra flash
+  narrows an undilated pupil for the next shot. A bad photo that is kept can cost a recall visit. The larger gain would
+  come from a better overall check.
 - **Naming:** on caught photos with a labelled problem, the first problem it names is a real one 89% of the time.
   By problem: focus-only 100% (26), aim-only 89% (18), obstruction-only 30% (10). Obstruction is the weak spot.
 - **Another hospital:** heads trained on one DeepDRiD hospital score AUROC 0.75–0.93 on the other two
@@ -233,6 +251,11 @@ the IDRiD zips (*A. Segmentation*, *B. Disease Grading*, *C. Localization*). The
 Further checks, each optional:
 - `python scripts/energy_analysis.py --build quality/build_features.npz --labels Challenge2_labels.xlsx`: the energy
   numbers above ($0, no GPU).
+- `python scripts/operating_points.py --features quality/features.npz --build quality/build_features.npz --labels Challenge2_labels.xlsx`:
+  the retake-line trade-off above ($0, no GPU).
+- `pytest -q`: 27 tests of the sentences, the coach's note, privacy between tabs and the visit report. They use a small
+  stand-in for DINOv2, so they need no download or key, and GitHub runs them on every push. They check the code, not the
+  accuracy; the reports in `results/` cover accuracy.
 - `notebooks/7_sam_coverage_pilot.ipynb`: does SAM 3.1's outline of shadows and glare follow DeepDRiD's artifact
   score, which is defined by coverage? Capped at 80 requests and $0.20. **It did not.** Asked for "dark shadow" and
   "bright glare", SAM 3.1 outlined nothing on any of 39 validation photos, including ones with an obvious shadow or
